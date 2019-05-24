@@ -87,7 +87,7 @@ public class MainScreenController implements Initializable {
     @FXML
     void onAddPartButtonClick(ActionEvent event) throws MalformedURLException, IOException {
         FXMLLoader loader = new FXMLLoader();
-        loader.setLocation(new URL("/view/EditPartController.fxml"));
+        loader.setLocation(getClass().getResource("/view/EditPartController.fxml"));
         EditPartController controller = loader.getController();
         Stage stage = (Stage)((Button)event.getSource()).getScene().getWindow();
         stage.setScene(new Scene(loader.load()));
@@ -100,7 +100,7 @@ public class MainScreenController implements Initializable {
     @FXML
     void onAddProductButtonClick(ActionEvent event) throws MalformedURLException, IOException {
         FXMLLoader loader = new FXMLLoader();
-        loader.setLocation(new URL("/view/EditProductController.fxml"));
+        loader.setLocation(getClass().getResource("/view/EditProductController.fxml"));
         EditProductController controller = loader.getController();
         Stage stage = (Stage)((Button)event.getSource()).getScene().getWindow();
         stage.setScene(new Scene(loader.load()));
@@ -167,9 +167,7 @@ public class MainScreenController implements Initializable {
     }
 
     @FXML
-    void onExitClick(ActionEvent event) {
-
-    }
+    void onExitClick(ActionEvent event) { ((Button)event.getSource()).getScene().getWindow().hide(); }
 
     @FXML
     void onModifyPartButtonClick(ActionEvent event) throws MalformedURLException, IOException {
@@ -179,7 +177,7 @@ public class MainScreenController implements Initializable {
             return;
         }
         FXMLLoader loader = new FXMLLoader();
-        loader.setLocation(new URL("/view/EditPartController.fxml"));
+        loader.setLocation(getClass().getResource("/view/EditPartController.fxml"));
         EditPartController controller = loader.getController();
         controller.applyModel(sourcePart);
         Stage stage = (Stage)((Button)event.getSource()).getScene().getWindow();
@@ -198,7 +196,7 @@ public class MainScreenController implements Initializable {
             return;
         }
         FXMLLoader loader = new FXMLLoader();
-        loader.setLocation(new URL("/view/EditProductController.fxml"));
+        loader.setLocation(getClass().getResource("/view/EditProductController.fxml"));
         EditProductController controller = loader.getController();
         controller.applyModel(sourceProduct);
         Stage stage = (Stage)((Button)event.getSource()).getScene().getWindow();
