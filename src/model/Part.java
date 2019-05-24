@@ -42,7 +42,7 @@ public abstract class Part implements IdReferenceableObject {
     @Override
     public void setId(int id) {
         int oldId = this.id;
-        // TODO: Make sure ID doesn't already exist.
+        Inventory.assertValidIdChange(this, id);
         this.id = id;
         propertyChangeSupport.firePropertyChange(PROP_ID, oldId, id);
     }

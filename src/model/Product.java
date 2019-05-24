@@ -45,9 +45,7 @@ public class Product implements IdReferenceableObject {
     @Override
     public void setId(int id) {
         int oldId = this.id;
-        if (Inventory.containsProduct(this)) {
-            
-        }
+        Inventory.assertValidIdChange(this, id);
         this.id = id;
         propertyChangeSupport.firePropertyChange(PROP_ID, oldId, id);
     }
