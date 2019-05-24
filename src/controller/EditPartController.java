@@ -93,6 +93,7 @@ public class EditPartController implements Initializable {
     @FXML
     void onCancelButtonClick(ActionEvent event) {
         saveChanges = false;
+        ((Button)event.getSource()).getScene().getWindow().hide();
     }
 
     @FXML
@@ -103,6 +104,7 @@ public class EditPartController implements Initializable {
     @FXML
     void onSaveButtonClick(ActionEvent event) {
         saveChanges = true;
+        ((Button)event.getSource()).getScene().getWindow().hide();
     }
 
     /**

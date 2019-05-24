@@ -91,7 +91,7 @@ public class EditProductController implements Initializable {
 
     @FXML
     void cancelButtonClick(ActionEvent event) {
-
+        
     }
 
     @FXML
