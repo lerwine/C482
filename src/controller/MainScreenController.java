@@ -178,6 +178,7 @@ public class MainScreenController implements Initializable {
         }
         FXMLLoader loader = new FXMLLoader();
         loader.setLocation(getClass().getResource("/view/EditPartController.fxml"));
+        loader.load();
         EditPartController controller = loader.getController();
         controller.applyModel(sourcePart);
         Stage stage = (Stage)((Button)event.getSource()).getScene().getWindow();
@@ -197,6 +198,7 @@ public class MainScreenController implements Initializable {
         }
         FXMLLoader loader = new FXMLLoader();
         loader.setLocation(getClass().getResource("/view/EditProductController.fxml"));
+        loader.load();
         EditProductController controller = loader.getController();
         controller.applyModel(sourceProduct);
         Stage stage = (Stage)((Button)event.getSource()).getScene().getWindow();
@@ -245,5 +247,7 @@ public class MainScreenController implements Initializable {
         productInventoryLevelTableColumn.setCellValueFactory(new PropertyValueFactory<>("stock"));
         productNameTableColumn.setCellValueFactory(new PropertyValueFactory<>("name"));
         productPriceTableColumn.setCellValueFactory(new PropertyValueFactory<>("price"));
+        partsTableView.setItems(Inventory.getAllParts());
+        productsTableView.setItems(Inventory.getAllProducts());
     }
 }

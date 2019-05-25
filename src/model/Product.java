@@ -134,12 +134,17 @@ public class Product implements IdReferenceableObject {
     }
 
     /**
-     * @param part Part to delete.
+     * @param part Part to add.
      */
     public void deleteAssociatedPart(Part part) {
-        if (associatedParts.contains(part))
-            associatedParts.remove(part);
+        if (part != null && associatedParts.contains(part))
+        associatedParts.remove(part);
     }
+    
+    /**
+     * @param part Part to look for.
+     */
+    public boolean containsAssociatedPart(Part part) {return associatedParts.contains(part); }
 
     /**
      * @return the associatedParts

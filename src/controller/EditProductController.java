@@ -7,6 +7,8 @@ package controller;
 
 import java.net.URL;
 import java.util.ResourceBundle;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
@@ -16,6 +18,7 @@ import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
 import javafx.scene.control.cell.PropertyValueFactory;
+import model.Inventory;
 
 /**
  * FXML Controller class
@@ -48,37 +51,37 @@ public class EditProductController implements Initializable {
     private TextField searchTextField;
 
     @FXML
-    private TableView<?> unselectedPartsTableView;
+    private TableView<model.Part> unselectedPartsTableView;
 
     @FXML
-    private TableColumn<?, ?> uPartIdTableColumn;
+    private TableColumn<model.Part, Integer> uPartIdTableColumn;
 
     @FXML
-    private TableColumn<?, ?> uPartNameTableColumn;
+    private TableColumn<model.Part, String> uPartNameTableColumn;
 
     @FXML
-    private TableColumn<?, ?> uInventoryLevelTableColumn;
+    private TableColumn<model.Part, Integer> uInventoryLevelTableColumn;
 
     @FXML
-    private TableColumn<?, ?> uPricePerUnitTableColumn;
+    private TableColumn<model.Part, Double> uPricePerUnitTableColumn;
 
     @FXML
     private Button addPartButton;
 
     @FXML
-    private TableView<?> selectedPartsPartsTableView;
+    private TableView<model.Part> selectedPartsPartsTableView;
 
     @FXML
-    private TableColumn<?, ?> sPartIdTableColumn;
+    private TableColumn<model.Part, Integer> sPartIdTableColumn;
 
     @FXML
-    private TableColumn<?, ?> sPartNameTableColumn;
+    private TableColumn<model.Part, String> sPartNameTableColumn;
 
     @FXML
-    private TableColumn<?, ?> sInventoryLevelTableColumn;
+    private TableColumn<model.Part, Integer> sInventoryLevelTableColumn;
 
     @FXML
-    private TableColumn<?, ?> sPricePerUnitTableColumn;
+    private TableColumn<model.Part, Double> sPricePerUnitTableColumn;
 
     @FXML
     private Button deletePartButton;
@@ -91,7 +94,8 @@ public class EditProductController implements Initializable {
 
     @FXML
     void cancelButtonClick(ActionEvent event) {
-        
+        saveChanges = false;
+        ((Button)event.getSource()).getScene().getWindow().hide();
     }
 
     @FXML
@@ -101,8 +105,12 @@ public class EditProductController implements Initializable {
 
     @FXML
     void saveButtonClick(ActionEvent event) {
-
+        saveChanges = true;
+        ((Button)event.getSource()).getScene().getWindow().hide();
     }
+    
+    private boolean saveChanges = false;
+    private int modelId = -1;
     
     /**
      * Initializes the controller class.
@@ -122,10 +130,44 @@ public class EditProductController implements Initializable {
     }
     
     public void applyModel(model.Product product) {
-        
+        if (product == null)
+            return;
+        modelId = product.getId();
+        editProductLabel.setText("Modify Product");
+        idTextField.setText(String.valueOf(modelId = product.getId()));
+        nameTextField.setText(product.getName());
+        inventoryTextField.setText(String.valueOf(product.getStock()));
+        priceTextField.setText(String.valueOf(product.getPrice()));
+        maxTextField.setText(String.valueOf(product.getMax()));
+        minTextField.setText(String.valueOf(product.getMin()));
+        ObservableList<model.Part> availableParts = FXCollections.observableArrayList();
+        ObservableList<model.Part> selectedParts = FXCollections.observableArrayList();
+        for (model.Part part : Inventory.getAllParts()) {
+            if (product.containsAssociatedPart(part))
+                selectedParts.add(part);
+            else
+                availableParts.add(part);
+        }
+        unselectedPartsTableView.setItems(availableParts);
+        selectedPartsPartsTableView.setItems(selectedParts);
     }
     
     public model.Product getModel() {
-        return null;
+        if (!saveChanges)
+            return null;
+        
+        model.Product result = new model.Product(modelId, nameTextField.getText().trim(), Double.parseDouble(priceTextField.getText().trim()),
+            Integer.parseInt(inventoryTextField.getText().trim()), Integer.parseInt(minTextField.getText().trim()),
+            Integer.parseInt(maxTextField.getText().trim()));
+        ObservableList<model.Part> selectedParts = selectedPartsPartsTableView.getItems();
+        for (model.Part part : result.getAllAssociatedParts()) {
+            if (!selectedParts.contains(part))
+                result.deleteAssociatedPart(part);
+        }
+        for (model.Part part : selectedParts) {
+            if (!result.containsAssociatedPart(part))
+                result.addAssociatedPart(part);
+        }
+        return result;
     }
 }

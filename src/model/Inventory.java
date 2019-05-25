@@ -28,7 +28,7 @@ public class Inventory {
             throw new NullPointerException();
         if (allParts.contains(part))
             return;
-        if (lookupPart(part.getId()) != null) {
+        if (part.getId() < 0 || lookupPart(part.getId()) != null) {
             int id = allParts.size();
             int alt = id;
             boolean useId = true;
@@ -50,7 +50,7 @@ public class Inventory {
             throw new NullPointerException();
         if (allProducts.contains(product))
             return;
-        if (lookupPart(product.getId()) != null) {
+        if (product.getId() < 0 || lookupPart(product.getId()) != null) {
             int id = allProducts.size();
             int alt = id;
             boolean useId = true;

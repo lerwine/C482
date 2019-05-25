@@ -18,16 +18,22 @@ HBox.header-section {
     -fx-spacing: 16px;
     -fx-padding: 16px 16px 0px 16px;
 }
-
-.header-section Label {
+Label.header-section {
+    -fx-padding: 16px 16px 0px 16px;
+}
+.header-section Label, Label.header-section {
     -fx-text-fill: #3f007f;
     -fx-font-size: 18px;
+}
+.header-section Label {
     -fx-padding: 0px 32px 0px 0px;
+}
+.content-section {
+    -fx-padding: 16px;
 }
 GridPane.content-section {
     -fx-hgap: 4px;
     -fx-vgap: 16px;
-    -fx-padding: 16px;
 }
 
 GridPane.content-section Label.hLeftFieldLabel,

@@ -1,14 +1,103 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import java.lang.*?>
-<?import java.util.*?>
-<?import javafx.scene.*?>
-<?import javafx.scene.control.*?>
-<?import javafx.scene.layout.*?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ButtonBar?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.SplitPane?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.ColumnConstraints?>
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.RowConstraints?>
+<?import javafx.scene.layout.VBox?>
 
-<AnchorPane id="AnchorPane" prefHeight="200" prefWidth="320" xmlns:fx="http://javafx.com/fxml/1" fx:controller="controller.EditProductController">
-    <children>
-        <Button layoutX="126" layoutY="90" text="Click Me!" onAction="#handleButtonAction" fx:id="button" />
-        <Label layoutX="126" layoutY="120" minHeight="16" minWidth="69" fx:id="label" />
-    </children>
-</AnchorPane>
+<HBox prefHeight="680.0" prefWidth="720.0" stylesheets="@defaultStyleSheet.css" xmlns="http://javafx.com/javafx/8.0.171" xmlns:fx="http://javafx.com/fxml/1" fx:controller="controller.EditProductController">
+   <children>
+       <VBox prefHeight="848.0" prefWidth="270.0">
+        <Label fx:id="editProductLabel" styleClass="header-section" text="Add Product" />
+        <GridPane styleClass="content-section">
+          <columnConstraints>
+            <ColumnConstraints />
+            <ColumnConstraints minWidth="65.0" prefWidth="65.0" />
+            <ColumnConstraints minWidth="37.0" prefWidth="37.0" />
+            <ColumnConstraints prefWidth="65.0" />
+          </columnConstraints>
+          <rowConstraints>
+              <RowConstraints />
+              <RowConstraints />
+              <RowConstraints />
+              <RowConstraints />
+              <RowConstraints />
+              <RowConstraints />
+          </rowConstraints>
+           <children>
+              <Label styleClass="hLeftFieldLabel" text="ID" GridPane.halignment="RIGHT" GridPane.valignment="TOP" />
+              <TextField fx:id="idTextField" disable="true" styleClass="hFieldControl" text="(auto-generated)" GridPane.columnIndex="1" GridPane.columnSpan="3" GridPane.hgrow="ALWAYS" GridPane.valignment="TOP" />
+              <Label styleClass="hLeftFieldLabel" text="Name" GridPane.halignment="RIGHT" GridPane.rowIndex="1" GridPane.valignment="TOP" />
+              <TextField fx:id="nameTextField" styleClass="hFieldControl" GridPane.columnIndex="1" GridPane.columnSpan="3" GridPane.hgrow="ALWAYS" GridPane.rowIndex="1" GridPane.valignment="TOP" />
+              <Label styleClass="hLeftFieldLabel" text="Inv" GridPane.halignment="RIGHT" GridPane.rowIndex="2" GridPane.valignment="TOP" />
+              <TextField fx:id="inventoryTextField" styleClass="hFieldControl" GridPane.columnIndex="1" GridPane.columnSpan="2" GridPane.hgrow="ALWAYS" GridPane.rowIndex="2" GridPane.valignment="TOP" />
+              <Label styleClass="hLeftFieldLabel" text="Price/Cost" GridPane.halignment="RIGHT" GridPane.rowIndex="3" GridPane.valignment="TOP" />
+              <TextField fx:id="priceTextField" styleClass="hFieldControl" GridPane.columnIndex="1" GridPane.columnSpan="2" GridPane.hgrow="ALWAYS" GridPane.rowIndex="3" GridPane.valignment="TOP" />
+              <Label styleClass="hLeftFieldLabel" text="Max" GridPane.halignment="RIGHT" GridPane.rowIndex="4" GridPane.valignment="TOP" />
+              <TextField fx:id="maxTextField" styleClass="hFieldControl" GridPane.columnIndex="1" GridPane.hgrow="ALWAYS" GridPane.rowIndex="4" GridPane.valignment="TOP" />
+              <Label styleClass="hInnerFieldLabel" text="Min" GridPane.columnIndex="2" GridPane.halignment="RIGHT" GridPane.rowIndex="4" GridPane.valignment="TOP" />
+              <TextField fx:id="minTextField" styleClass="hLeftFieldLabel" GridPane.columnIndex="3" GridPane.hgrow="ALWAYS" GridPane.rowIndex="4" GridPane.valignment="TOP" />
+           </children>
+        </GridPane>
+       </VBox>
+       <VBox HBox.hgrow="ALWAYS">
+           <HBox styleClass="content-section">
+                <Button mnemonicParsing="false" onAction="#onSearchPartClick" text="Search" />
+                <TextField fx:id="searchTextField" />
+           </HBox>
+         <SplitPane dividerPositions="0.5" orientation="VERTICAL" VBox.vgrow="SOMETIMES">
+           <items>
+             <VBox alignment="TOP_RIGHT" spacing="8.0">
+                  <children>
+                     <TableView fx:id="unselectedPartsTableView" VBox.vgrow="SOMETIMES">
+                       <columns>
+                         <TableColumn fx:id="uPartIdTableColumn" editable="false" prefWidth="62.0" text="Part ID" />
+                         <TableColumn fx:id="uPartNameTableColumn" editable="false" prefWidth="150.0" text="Part Name" />
+                         <TableColumn fx:id="uInventoryLevelTableColumn" editable="false" prefWidth="114.0" text="Inventory Level" />
+                         <TableColumn fx:id="uPricePerUnitTableColumn" editable="false" prefWidth="105.0" text="Price per Unit" />
+                       </columns>
+                     </TableView>
+                     <Button fx:id="addPartButton" mnemonicParsing="false" text="Add" VBox.vgrow="NEVER" />
+                  </children>
+                  <padding>
+                     <Insets bottom="8.0" />
+                  </padding>
+             </VBox>
+             <VBox alignment="TOP_RIGHT" spacing="8.0">
+                  <children>
+                     <TableView fx:id="selectedPartsPartsTableView" VBox.vgrow="SOMETIMES">
+                       <columns>
+                         <TableColumn fx:id="sPartIdTableColumn" editable="false" prefWidth="62.0" text="Part ID" />
+                         <TableColumn fx:id="sPartNameTableColumn" editable="false" prefWidth="150.0" text="Part Name" />
+                         <TableColumn fx:id="sInventoryLevelTableColumn" editable="false" prefWidth="114.0" text="Inventory Level" />
+                         <TableColumn fx:id="sPricePerUnitTableColumn" editable="false" prefWidth="105.0" text="Price per Unit" />
+                       </columns>
+                     </TableView>
+                     <Button fx:id="deletePartButton" mnemonicParsing="false" text="Delete" VBox.vgrow="NEVER" />
+                  </children>
+                  <padding>
+                     <Insets bottom="8.0" top="8.0" />
+                  </padding></VBox>
+           </items>
+            <VBox.margin>
+               <Insets bottom="16.0" right="16.0" />
+            </VBox.margin>
+         </SplitPane>
+         <ButtonBar styleClass="command-section">
+           <buttons>
+             <Button fx:id="saveButton" defaultButton="true" mnemonicParsing="false" onAction="#saveButtonClick" text="Save" />
+               <Button fx:id="cancelButton" cancelButton="true" mnemonicParsing="false" onAction="#cancelButtonClick" text="Cancel" />
+           </buttons>
+         </ButtonBar>
+       </VBox>
+   </children>
+</HBox>
