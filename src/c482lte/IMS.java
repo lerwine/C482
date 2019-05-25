@@ -23,7 +23,6 @@ public class IMS extends Application {
         Parent root = FXMLLoader.load(getClass().getResource("/view/MainScreen.fxml"));
         
         Scene scene = new Scene(root);
-        //scene.getStylesheets().add(getClass().getResource("view/defaultStyleSheet.css").toExternalForm());
         stage.setScene(scene);
         stage.show();
     }
