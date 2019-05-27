@@ -26,9 +26,9 @@
       </HBox>
       <GridPane styleClass="content-section">
         <columnConstraints>
-          <ColumnConstraints hgrow="NEVER" />
+          <ColumnConstraints hgrow="SOMETIMES" minWidth="106.0" />
           <ColumnConstraints hgrow="ALWAYS" />
-          <ColumnConstraints hgrow="NEVER" />
+          <ColumnConstraints hgrow="SOMETIMES" minWidth="37.0" />
           <ColumnConstraints hgrow="ALWAYS" />
         </columnConstraints>
         <rowConstraints>
@@ -41,19 +41,19 @@
         </rowConstraints>
          <children>
             <Label styleClass="hLeftFieldLabel" text="ID" GridPane.halignment="RIGHT" GridPane.valignment="TOP" />
-            <TextField fx:id="idTextField" disable="true" styleClass="hFieldControl" text="(auto-generated)" GridPane.columnIndex="1" GridPane.columnSpan="3" GridPane.hgrow="ALWAYS" GridPane.valignment="TOP" />
+            <TextField fx:id="idTextField" accessibleText="Auto-genered ID number" disable="true" promptText="(auto-generated)" styleClass="hFieldControl" GridPane.columnIndex="1" GridPane.columnSpan="3" GridPane.hgrow="ALWAYS" GridPane.valignment="TOP" />
             <Label styleClass="hLeftFieldLabel" text="Name" GridPane.halignment="RIGHT" GridPane.rowIndex="1" GridPane.valignment="TOP" />
-            <TextField fx:id="nameTextField" styleClass="hFieldControl" GridPane.columnIndex="1" GridPane.columnSpan="3" GridPane.hgrow="ALWAYS" GridPane.rowIndex="1" GridPane.valignment="TOP" />
+            <TextField fx:id="nameTextField" accessibleText="Part Name" styleClass="hFieldControl" GridPane.columnIndex="1" GridPane.columnSpan="3" GridPane.hgrow="ALWAYS" GridPane.rowIndex="1" GridPane.valignment="TOP" />
             <Label styleClass="hLeftFieldLabel" text="Inv" GridPane.halignment="RIGHT" GridPane.rowIndex="2" GridPane.valignment="TOP" />
-            <TextField fx:id="inventoryTextField" styleClass="hFieldControl" GridPane.columnIndex="1" GridPane.columnSpan="3" GridPane.hgrow="ALWAYS" GridPane.rowIndex="2" GridPane.valignment="TOP" />
+            <TextField fx:id="inventoryTextField" accessibleText="Inventory (items in stock)" styleClass="hFieldControl" GridPane.columnIndex="1" GridPane.columnSpan="3" GridPane.hgrow="ALWAYS" GridPane.rowIndex="2" GridPane.valignment="TOP" />
             <Label styleClass="hLeftFieldLabel" text="Price/Cost" GridPane.halignment="RIGHT" GridPane.rowIndex="3" GridPane.valignment="TOP" />
-            <TextField fx:id="priceTextField" styleClass="hFieldControl" GridPane.columnIndex="1" GridPane.columnSpan="3" GridPane.hgrow="ALWAYS" GridPane.rowIndex="3" GridPane.valignment="TOP" />
+            <TextField fx:id="priceTextField" accessibleText="Price/Cost" styleClass="hFieldControl" GridPane.columnIndex="1" GridPane.columnSpan="3" GridPane.hgrow="ALWAYS" GridPane.rowIndex="3" GridPane.valignment="TOP" />
             <Label styleClass="hLeftFieldLabel" text="Max" GridPane.halignment="RIGHT" GridPane.rowIndex="4" GridPane.valignment="TOP" />
-            <TextField fx:id="maxTextField" styleClass="hFieldControl" GridPane.columnIndex="1" GridPane.hgrow="ALWAYS" GridPane.rowIndex="4" GridPane.valignment="TOP" />
+            <TextField fx:id="maxTextField" accessibleText="Maximum Inventory Level" styleClass="hFieldControl" GridPane.columnIndex="1" GridPane.hgrow="ALWAYS" GridPane.rowIndex="4" GridPane.valignment="TOP" />
             <Label styleClass="hInnerFieldLabel" text="Min" GridPane.columnIndex="2" GridPane.halignment="RIGHT" GridPane.rowIndex="4" GridPane.valignment="TOP" />
             <TextField fx:id="minTextField" styleClass="hLeftFieldLabel" GridPane.columnIndex="3" GridPane.hgrow="ALWAYS" GridPane.rowIndex="4" GridPane.valignment="TOP" />
             <Label fx:id="companyOrMachineLabel" styleClass="hLeftFieldLabel" text="Company Name" GridPane.halignment="RIGHT" GridPane.rowIndex="5" GridPane.valignment="TOP" />
-            <TextField fx:id="companyOrMachineTextField" styleClass="hFieldControl" GridPane.columnIndex="1" GridPane.columnSpan="3" GridPane.hgrow="ALWAYS" GridPane.rowIndex="5" GridPane.valignment="TOP" />
+            <TextField fx:id="companyOrMachineTextField" accessibleText="Company Name" styleClass="hFieldControl" GridPane.columnIndex="1" GridPane.columnSpan="3" GridPane.hgrow="ALWAYS" GridPane.rowIndex="5" GridPane.valignment="TOP" />
          </children>
       </GridPane>
       <ButtonBar styleClass="command-section">

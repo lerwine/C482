@@ -8,6 +8,7 @@
 <?import javafx.scene.control.TableColumn?>
 <?import javafx.scene.control.TableView?>
 <?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.AnchorPane?>
 <?import javafx.scene.layout.ColumnConstraints?>
 <?import javafx.scene.layout.GridPane?>
 <?import javafx.scene.layout.HBox?>
@@ -20,7 +21,7 @@
         <Label fx:id="editProductLabel" styleClass="header-section" text="Add Product" />
         <GridPane styleClass="content-section">
           <columnConstraints>
-            <ColumnConstraints />
+            <ColumnConstraints minWidth="74.0" />
             <ColumnConstraints minWidth="65.0" prefWidth="65.0" />
             <ColumnConstraints minWidth="37.0" prefWidth="37.0" />
             <ColumnConstraints prefWidth="65.0" />
@@ -35,38 +36,43 @@
           </rowConstraints>
            <children>
               <Label styleClass="hLeftFieldLabel" text="ID" GridPane.halignment="RIGHT" GridPane.valignment="TOP" />
-              <TextField fx:id="idTextField" disable="true" styleClass="hFieldControl" text="(auto-generated)" GridPane.columnIndex="1" GridPane.columnSpan="3" GridPane.hgrow="ALWAYS" GridPane.valignment="TOP" />
+              <TextField fx:id="idTextField" accessibleText="Auto-genered ID number" disable="true" promptText="(auto-generated)" styleClass="hFieldControl" GridPane.columnIndex="1" GridPane.columnSpan="3" GridPane.hgrow="ALWAYS" GridPane.valignment="TOP" />
               <Label styleClass="hLeftFieldLabel" text="Name" GridPane.halignment="RIGHT" GridPane.rowIndex="1" GridPane.valignment="TOP" />
-              <TextField fx:id="nameTextField" styleClass="hFieldControl" GridPane.columnIndex="1" GridPane.columnSpan="3" GridPane.hgrow="ALWAYS" GridPane.rowIndex="1" GridPane.valignment="TOP" />
+              <TextField fx:id="nameTextField" accessibleText="Part Name" styleClass="hFieldControl" GridPane.columnIndex="1" GridPane.columnSpan="3" GridPane.hgrow="ALWAYS" GridPane.rowIndex="1" GridPane.valignment="TOP" />
               <Label styleClass="hLeftFieldLabel" text="Inv" GridPane.halignment="RIGHT" GridPane.rowIndex="2" GridPane.valignment="TOP" />
-              <TextField fx:id="inventoryTextField" styleClass="hFieldControl" GridPane.columnIndex="1" GridPane.columnSpan="2" GridPane.hgrow="ALWAYS" GridPane.rowIndex="2" GridPane.valignment="TOP" />
+              <TextField fx:id="inventoryTextField" accessibleText="Inventory (items in stock)" styleClass="hFieldControl" GridPane.columnIndex="1" GridPane.columnSpan="2" GridPane.hgrow="ALWAYS" GridPane.rowIndex="2" GridPane.valignment="TOP" />
               <Label styleClass="hLeftFieldLabel" text="Price/Cost" GridPane.halignment="RIGHT" GridPane.rowIndex="3" GridPane.valignment="TOP" />
-              <TextField fx:id="priceTextField" styleClass="hFieldControl" GridPane.columnIndex="1" GridPane.columnSpan="2" GridPane.hgrow="ALWAYS" GridPane.rowIndex="3" GridPane.valignment="TOP" />
+              <TextField fx:id="priceTextField" accessibleText="Price/Cost" styleClass="hFieldControl" GridPane.columnIndex="1" GridPane.columnSpan="2" GridPane.hgrow="ALWAYS" GridPane.rowIndex="3" GridPane.valignment="TOP" />
               <Label styleClass="hLeftFieldLabel" text="Max" GridPane.halignment="RIGHT" GridPane.rowIndex="4" GridPane.valignment="TOP" />
-              <TextField fx:id="maxTextField" styleClass="hFieldControl" GridPane.columnIndex="1" GridPane.hgrow="ALWAYS" GridPane.rowIndex="4" GridPane.valignment="TOP" />
-              <Label styleClass="hInnerFieldLabel" text="Min" GridPane.columnIndex="2" GridPane.halignment="RIGHT" GridPane.rowIndex="4" GridPane.valignment="TOP" />
+              <TextField fx:id="maxTextField" accessibleText="Maximum Inventory Level" styleClass="hFieldControl" GridPane.columnIndex="1" GridPane.hgrow="ALWAYS" GridPane.rowIndex="4" GridPane.valignment="TOP" />
+              <Label accessibleText="Minimum Inventory Level" styleClass="hInnerFieldLabel" text="Min" GridPane.columnIndex="2" GridPane.halignment="RIGHT" GridPane.rowIndex="4" GridPane.valignment="TOP" />
               <TextField fx:id="minTextField" styleClass="hLeftFieldLabel" GridPane.columnIndex="3" GridPane.hgrow="ALWAYS" GridPane.rowIndex="4" GridPane.valignment="TOP" />
            </children>
         </GridPane>
        </VBox>
        <VBox HBox.hgrow="ALWAYS">
            <HBox styleClass="content-section">
-                <Button mnemonicParsing="false" onAction="#onSearchPartClick" text="Search" />
-                <TextField fx:id="searchTextField" />
+                <Button fx:id="partsSearchButton" defaultButton="true" mnemonicParsing="false" onAction="#onSearchPartClick" text="Search" />
+                <TextField fx:id="searchTextField" HBox.hgrow="ALWAYS" />
            </HBox>
          <SplitPane dividerPositions="0.5" orientation="VERTICAL" VBox.vgrow="SOMETIMES">
            <items>
              <VBox alignment="TOP_RIGHT" spacing="8.0">
                   <children>
-                     <TableView fx:id="unselectedPartsTableView" VBox.vgrow="SOMETIMES">
-                       <columns>
-                         <TableColumn fx:id="uPartIdTableColumn" editable="false" prefWidth="62.0" text="Part ID" />
-                         <TableColumn fx:id="uPartNameTableColumn" editable="false" prefWidth="150.0" text="Part Name" />
-                         <TableColumn fx:id="uInventoryLevelTableColumn" editable="false" prefWidth="114.0" text="Inventory Level" />
-                         <TableColumn fx:id="uPricePerUnitTableColumn" editable="false" prefWidth="105.0" text="Price per Unit" />
-                       </columns>
-                     </TableView>
-                     <Button fx:id="addPartButton" mnemonicParsing="false" text="Add" VBox.vgrow="NEVER" />
+                     <AnchorPane VBox.vgrow="ALWAYS">
+                        <children>
+                           <TableView fx:id="unselectedPartsTableView" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+                             <columns>
+                               <TableColumn fx:id="uPartIdTableColumn" editable="false" prefWidth="62.0" text="Part ID" />
+                               <TableColumn fx:id="uPartNameTableColumn" editable="false" prefWidth="150.0" text="Part Name" />
+                               <TableColumn fx:id="uInventoryLevelTableColumn" editable="false" prefWidth="114.0" text="Inventory Level" />
+                               <TableColumn fx:id="uPricePerUnitTableColumn" editable="false" prefWidth="105.0" text="Price per Unit" />
+                             </columns>
+                           </TableView>
+                           <Label fx:id="noMatchesLabel" alignment="CENTER" contentDisplay="CENTER" text="No matching items found." textAlignment="CENTER" visible="false" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" />
+                        </children>
+                     </AnchorPane>
+                     <Button mnemonicParsing="false" onAction="#addPartButtonClick" text="Add" />
                   </children>
                   <padding>
                      <Insets bottom="8.0" />
@@ -82,7 +88,7 @@
                          <TableColumn fx:id="sPricePerUnitTableColumn" editable="false" prefWidth="105.0" text="Price per Unit" />
                        </columns>
                      </TableView>
-                     <Button fx:id="deletePartButton" mnemonicParsing="false" text="Delete" VBox.vgrow="NEVER" />
+                     <Button mnemonicParsing="false" onAction="#deletePartButtonClick" text="Delete" VBox.vgrow="NEVER" />
                   </children>
                   <padding>
                      <Insets bottom="8.0" top="8.0" />
@@ -94,8 +100,8 @@
          </SplitPane>
          <ButtonBar styleClass="command-section">
            <buttons>
-             <Button fx:id="saveButton" defaultButton="true" mnemonicParsing="false" onAction="#saveButtonClick" text="Save" />
-               <Button fx:id="cancelButton" cancelButton="true" mnemonicParsing="false" onAction="#cancelButtonClick" text="Cancel" />
+             <Button mnemonicParsing="false" onAction="#saveButtonClick" text="Save" />
+               <Button cancelButton="true" mnemonicParsing="false" onAction="#cancelButtonClick" text="Cancel" />
            </buttons>
          </ButtonBar>
        </VBox>

@@ -5,22 +5,23 @@
  */
 package model;
 
-import java.beans.PropertyVetoException;
+import java.security.InvalidKeyException;
 
 /**
- *
- * @author lerwi
+ *Interface for object that associated with a unique identifier value.
+ * @author Leonard T. Erwine
  */
 public interface IdReferenceableObject {
 
     /**
-     * @return the id
+     * @return The unique identifier value.
      */
     int getId();
 
     /**
-     * @param id the id to set
+     * @param id The unique identifier value to set.
+     * @throws java.security.InvalidKeyException Unique identifier is less than zero or another item in its host list already uses that unique identifier.
      */
-    void setId(int id) throws PropertyVetoException;
+    void setId(int id) throws InvalidKeyException;
     
 }
