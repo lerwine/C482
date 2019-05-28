@@ -3,14 +3,16 @@ package model;
 import java.security.InvalidParameterException;
 
 /**
- *Represents an part that is produced in-house.
+ * Represents an part that is produced in-house.
+ * 
  * @author Leonard T. Erwine
  */
 public class InHouse extends Part {
     private int machineId;
     
     /**
-     *Creates a new object to represent a part that is produced in-house.
+     * Creates a new object to represent a part that is produced in-house.
+     * 
      * @param id The unique identifier for the part. This can be set to a negative value if it's a new part, and a new identifier will be automatically set when it is added.
      * @param name The name of the part.
      * @param price The price of the part.
@@ -27,18 +29,20 @@ public class InHouse extends Part {
     }
 
     /**
+     * Gets the identifier of the machine that produced the part.
+     * 
      * @return The identifier of the machine that produced the part.
      */
     public int getMachineId() { return machineId; }
 
     /**
+     * Sets the identifier of the machine that produced the part.
+     * 
      * @param machineId The identifier of the machine that produced the part.
      */
     public void setMachineId(int machineId) {
         int oldMachineId = this.machineId;
         this.machineId = machineId;
-        propertyChangeSupport.firePropertyChange(PROP_MACHINEID, oldMachineId, machineId);
+        propertyChangeSupport.firePropertyChange(ModelHelper.PROP_MACHINEID, oldMachineId, machineId);
     }
-    
-    public static final String PROP_MACHINEID = "machineId";
 }

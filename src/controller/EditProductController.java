@@ -1,8 +1,8 @@
 package controller;
 
-import java.awt.event.InputMethodEvent;
 import java.io.IOException;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.Optional;
 import java.util.ResourceBundle;
 import java.util.logging.Level;
@@ -12,6 +12,7 @@ import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
+import javafx.scene.Node;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
@@ -21,15 +22,17 @@ import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.stage.StageStyle;
+import javafx.util.Pair;
+import model.ModelHelper;
 
 /**
- * FXML Controller class
+ * FXML Controller class for Adding and Modifying Products
  *
- * @author lerwi
+ * @author Leonard T. Erwine
  */
 public class EditProductController implements Initializable {
-    private int modelId = -1;
-    private ObservableList<model.Part> availableParts = FXCollections.observableArrayList();
+    private int currentProductId = -1;
+    private final ObservableList<model.Part> availableParts = FXCollections.observableArrayList();
     private boolean showingSearchResults = false;
     
     @FXML
@@ -78,7 +81,7 @@ public class EditProductController implements Initializable {
     private Label noMatchesLabel;
     
     @FXML
-    private TableView<model.Part> selectedPartsPartsTableView;
+    private TableView<model.Part> selectedPartsTableView;
 
     @FXML
     private TableColumn<model.Part, Integer> sPartIdTableColumn;
@@ -94,19 +97,10 @@ public class EditProductController implements Initializable {
 
     @FXML
     void cancelButtonClick(ActionEvent event) {
-        Alert alert = new Alert(Alert.AlertType.WARNING, "All changes will be lost. Are you sure you want to cancel?", ButtonType.YES, ButtonType.NO);
-        alert.initStyle(StageStyle.UTILITY);
-        alert.setTitle("Cancel changes");
-        alert.setHeaderText("Confirm Cancel");
-        Optional<ButtonType> result = alert.showAndWait();
+        Optional<ButtonType> result = ModelHelper.showConfirmationDialog("Cancel Changes", "All changes will be lost",
+                "Are you sure you want to cancel?", Alert.AlertType.CONFIRMATION);
         if (result.isPresent() && result.get() == ButtonType.YES)
-        {
-            try {
-                MainScreenController.changeToMainScreen(((Button)event.getSource()).getScene(), getClass());
-            } catch (IOException ex) {
-                Logger.getLogger(EditProductController.class.getName()).log(Level.SEVERE, null, ex);
-            }
-        }
+            MainScreenController.changeScene((Node)event.getSource(), MainScreenController.VIEW_PATH_MAINSCREEN);
     }
 
     @FXML
@@ -117,19 +111,19 @@ public class EditProductController implements Initializable {
             unselectedPartsTableView.setVisible(true);
             noMatchesLabel.setVisible(false);
             searchTextField.setDisable(false);
+            searchTextField.setText("");
             partsSearchButton.setText("Search");
             return;
         }
         String searchText = searchTextField.getText().trim().toLowerCase();
         if (searchText.length() == 0) {
-            model.Inventory.showWarningAlert("No text", "Enter a name to search for...");
+            ModelHelper.showNotificationDialog("No text", "Nothing to search", "Enter a name to search for...", Alert.AlertType.WARNING);
             return;
         }
+        
         ObservableList<model.Part> searchResults = FXCollections.observableArrayList();
-        for (model.Part part : availableParts) {
-            if (part.getName().toLowerCase().contains(searchText))
-                searchResults.add(part);
-        }
+        availableParts.stream().filter((part) -> (part.getName().toLowerCase().contains(searchText))).forEachOrdered((part) -> searchResults.add(part));
+        
         if (searchResults.isEmpty()) {
             noMatchesLabel.setVisible(true);
             unselectedPartsTableView.setVisible(false);
@@ -145,124 +139,150 @@ public class EditProductController implements Initializable {
 
     @FXML
     void saveButtonClick(ActionEvent event) {
-        model.ValidationInfo errors = new model.ValidationInfo();
+        // Create list to store validation errors.
+        ArrayList<Pair<String, String>> errors = new ArrayList<>();
         
-        ObservableList<model.Part> selectedParts = selectedPartsPartsTableView.getItems();
-        if (selectedParts.isEmpty())
-            errors.add("Selected Parts", "Products must have at least one part.");
-        
+        // Validate that part name is not empty and trim extraneous white space.
         if (nameTextField.getText().trim().length() == 0)
-            errors.add(nameTextField.accessibleTextProperty().getValue(), "Text cannot be empty.");
+            errors.add(new Pair(nameTextField.accessibleTextProperty().getValue(), "Text cannot be empty."));
         
-        double price = 0.0;
-        String s = priceTextField.getText().trim();
-        if (s.length() == 0)
-            errors.add(priceTextField.accessibleTextProperty().getValue(), "Value cannot be empty.");
-        else {
-            try {
-                price = Double.parseDouble(s);
-                if (price < 0.0)
-                    errors.add(priceTextField.accessibleTextProperty().getValue(), "Value cannot be less than zero");
-                else {
-                    double partSum = selectedParts.stream().mapToDouble(p -> p.getPrice()).sum();
-                    if (partSum < price)
-                        errors.add(priceTextField.accessibleTextProperty().getValue(), "Value cannot be less than the total price of all parts (" +
-                                String.valueOf(partSum));
-                }
-            } catch (NumberFormatException e) {
-                errors.add(priceTextField.accessibleTextProperty().getValue(), "Invalid number value");
-            }
-        }
-        int stock = 0;
-        s = inventoryTextField.getText().trim();
-        if (s.length() == 0)
-            errors.add(inventoryTextField.accessibleTextProperty().getValue(), "Value cannot be empty.");
-        else {
-            try {
-                stock = Integer.parseInt(s);
-                if (stock < 0)
-                    errors.add(inventoryTextField.accessibleTextProperty().getValue(), "Value cannot be less than zero");
-            } catch (NumberFormatException e) {
-                errors.add(inventoryTextField.accessibleTextProperty().getValue(), "Invalid number value");
-            }
-        }
-        int min = 0;
-        s = minTextField.getText().trim();
-        if (s.length() == 0)
-            errors.add(minTextField.accessibleTextProperty().getValue(), "Value cannot be empty.");
-        else {
-            try {
-                min = Integer.parseInt(s);
-                if (min < 0)
-                    errors.add(minTextField.accessibleTextProperty().getValue(), "Value cannot be less than zero");
-            } catch (NumberFormatException e) {
-                errors.add(minTextField.accessibleTextProperty().getValue(), "Invalid number value");
-            }
-        }
-        int max = 0;
-        s = maxTextField.getText().trim();
-        if (s.length() == 0)
-            errors.add(maxTextField.accessibleTextProperty().getValue(), "Value cannot be empty.");
-        else {
-            try {
-                max = Integer.parseInt(s);
-                if (max <= min)
-                    errors.add(maxTextField.accessibleTextProperty().getValue(), "Value must be greater than the minimum inventory count.");
-            } catch (NumberFormatException e) {
-                errors.add(maxTextField.accessibleTextProperty().getValue(), "Invalid number value");
-            }
-        }
+        // Attempt to parse appropriate number values for other fields.
+        Optional<Double> price = ModelHelper.tryConvertToDouble(priceTextField.getText());
+        Optional<Integer> min = ModelHelper.tryConvertToInteger(minTextField.getText());
+        Optional<Integer> max = ModelHelper.tryConvertToInteger(maxTextField.getText());
+        Optional<Integer> stock = ModelHelper.tryConvertToInteger(inventoryTextField.getText());
         
-        // If this returns true, then errors were presented in a popup.
-        if (errors.showWarningAlert("Invalid product properties"))
+        // Get the parts that have been selected.
+        ObservableList<model.Part> selectedParts = selectedPartsTableView.getItems();
+        // Validate that there is at least 1 part selected.
+        if (selectedParts.isEmpty())
+            errors.add(new Pair("Selected Parts", "Products must have at least one part."));
+        
+        // Validate that the Price field contains a floating-point number and is greater than or equal to the sum of the prices of all parts.
+        if (price.isPresent()) {
+            if (price.get() < 0.0)
+                errors.add(new Pair(priceTextField.getAccessibleText(), "Price cannot be less than zero."));
+            else if (!selectedParts.isEmpty() && ModelHelper.getPriceSum(selectedParts) > price.get())
+                errors.add(new Pair(priceTextField.getAccessibleText(),
+                        "The sum of the price/cost of the associated parts cannot exceed the price of the product."));
+        } else if (priceTextField.getText().trim().length() == 0)
+            errors.add(new Pair(priceTextField.getAccessibleText(), "Value cannot be empty."));
+        else
+            errors.add(new Pair(priceTextField.getAccessibleText(), "Invalid number value."));
+        
+        // Validate that Min field contains an integer value that is greater than or equal to zero.
+        if (min.isPresent()) {
+            if (min.get() < 0)
+                errors.add(new Pair(minTextField.getAccessibleText(), "Value cannot be less than zero."));
+        } else if (minTextField.getText().trim().length() == 0)
+            errors.add(new Pair(minTextField.getAccessibleText(), "Value cannot be empty."));
+        else
+            errors.add(new Pair(minTextField.getAccessibleText(), "Invalid number value."));
+        
+        // Validate that Max field contains an integer value that is greater than or equal to the Min field.
+        if (max.isPresent()) {
+            if (max.get() < 0)
+                errors.add(new Pair(maxTextField.getAccessibleText(), "Value cannot be less than zero."));
+            else if (min.isPresent() && min.get() > max.get())
+                errors.add(new Pair(maxTextField.getAccessibleText(), "Value cannot be greater than " + minTextField.getAccessibleText() + "."));
+        } else if (maxTextField.getText().trim().length() == 0)
+            errors.add(new Pair(maxTextField.getAccessibleText(), "Value cannot be empty."));
+        else
+            errors.add(new Pair(maxTextField.getAccessibleText(), "Invalid number value."));
+        
+        // Validate that the Inv field contains an integer value that is not less than the Min field and not greater than the Max field.
+        if (stock.isPresent()) {
+            if (stock.get() < 0)
+                errors.add(new Pair(inventoryTextField.getAccessibleText(), "Value cannot be less than zero."));
+            else if (min.isPresent() && (!max.isPresent() || max.get() >= min.get()) && stock.get() < min.get())
+                errors.add(new Pair(inventoryTextField.getAccessibleText(), "Value cannot be less than " + minTextField.getAccessibleText() + "."));
+            else if (max.isPresent() && stock.get() > max.get())
+                errors.add(new Pair(inventoryTextField.getAccessibleText(), "Value cannot be greater than " + maxTextField.getAccessibleText() + "."));
+        } else if (inventoryTextField.getText().trim().length() == 0)
+            errors.add(new Pair(inventoryTextField.getAccessibleText(), "Value cannot be empty."));
+        else
+            errors.add(new Pair(inventoryTextField.getAccessibleText(), "Invalid number value."));
+        
+        // If we have errors, show alert dialog and return without saving or moving away from the current screen.
+        if (!errors.isEmpty()) {
+            if (errors.size() == 1)
+                ModelHelper.showNotificationDialog("Field Value Error", "Error in \"" + errors.get(0).getKey() + "\"", errors.get(0).getValue(), 
+                        Alert.AlertType.ERROR);
+            else
+                ModelHelper.showNotificationDialog("Field Value Errors", "Errors in " + String.valueOf(errors.size()) + " Fields", 
+                        ModelHelper.joinStrings(errors, (Pair<String, String> p) -> p.getKey() + ": " + p.getValue(), "\n"), Alert.AlertType.ERROR);
             return;
+        }
         
-        model.Product product = (modelId < 0) ? null : model.Inventory.lookupProduct(modelId);
+        model.Product product = (currentProductId < 0) ? null : model.Inventory.lookupProduct(currentProductId);
         if (product == null) {
-            product = new model.Product(modelId, nameTextField.getText(), price, stock, min, max);
+            // Create new product object, add selected parts, and add it to the inventory.
+            product = new model.Product(currentProductId, nameTextField.getText(), price.get(), stock.get(), min.get(), max.get());
             for (model.Part part : selectedParts)
                 product.addAssociatedPart(part);
             model.Inventory.addProduct(product);
         } else {
+            // Update product and selected parts.
             product.setName(nameTextField.getText());
-            product.setPrice(price);
-            product.setStock(stock);
-            product.setMinMax(min, max);
+            product.setPrice(price.get());
+            product.setStock(stock.get());
+            product.setMinMax(min.get(), max.get());
             product.setAllAssociatedParts(selectedParts);
         }
         
-        try {
-            MainScreenController.changeToMainScreen(((Button)event.getSource()).getScene(), getClass());
-        } catch (IOException ex) {
-            Logger.getLogger(EditProductController.class.getName()).log(Level.SEVERE, null, ex);
-        }
+        // Change back to the main screen.
+        MainScreenController.changeScene((Node)event.getSource(), MainScreenController.VIEW_PATH_MAINSCREEN);
     }
     
     @FXML
     void addPartButtonClick(ActionEvent event) {
+        // Get part to be added.
         model.Part part = unselectedPartsTableView.getSelectionModel().getSelectedItem();
         if (part == null) {
-            model.Inventory.showWarningAlert("No selection", "You must select a part before it can be added.");
+            ModelHelper.showNotificationDialog("No selection", "Part must be selected", "You must select a part before it can be added.",
+                    Alert.AlertType.WARNING);
             return;
         }
+        
+        Logger.getLogger(getClass().getName()).log(Level.INFO, "Adding part id {0}", part.getId());
+        
+        // Show warning if adding new part will cause sum of all parts to exceed product price.
+        Optional<Double> price = ModelHelper.tryConvertToDouble(priceTextField.getText());
+        if (price.isPresent() && price.get() >= 0.0) {
+            if (ModelHelper.getPriceSum(part.getId(), part.getPrice(), selectedPartsTableView.getItems()) > price.get()) {
+                Optional<ButtonType> confirmation = ModelHelper.showConfirmationDialog("Price Constraint", "Sum of part prices exceeds product Price",
+                        "Adding this new part will cause the sum of all part prices to exxceed the product price.\n\nAre you sure you want to add this part?",
+                        Alert.AlertType.CONFIRMATION);
+                if (!confirmation.isPresent() || confirmation.get() != ButtonType.YES)
+                    return;
+            }
+        } else {
+            Optional<ButtonType> confirmation = ModelHelper.showConfirmationDialog("Invalid Product Price", "Product price does not contain a valid number",
+                    "Product / Part sum constraint cannot be validated.\n\nAre you sure you want to add this part?",
+                    Alert.AlertType.CONFIRMATION);
+            if (!confirmation.isPresent() || confirmation.get() != ButtonType.YES)
+                return;
+        }
+        
         ObservableList<model.Part> items = unselectedPartsTableView.getItems();
         items.remove(part);
-        selectedPartsPartsTableView.getItems().add(part);
+        selectedPartsTableView.getItems().add(part);
         if (showingSearchResults)
             availableParts.remove(part);
     }
     
     @FXML
     void deletePartButtonClick(ActionEvent event) {
-        model.Part part = selectedPartsPartsTableView.getSelectionModel().getSelectedItem();
+        model.Part part = selectedPartsTableView.getSelectionModel().getSelectedItem();
         if (part == null) {
-            model.Inventory.showWarningAlert("No selection", "You must select a part before it can be deleted.");
+            ModelHelper.showNotificationDialog("No selection", "Part must be selected", "You must select a part before it can be removed.", 
+                    Alert.AlertType.WARNING);
             return;
         }
-        ObservableList<model.Part> items = selectedPartsPartsTableView.getItems();
-        if (items.size() == 1)
-        if (part == null) {
-            model.Inventory.showWarningAlert("Minimum part constraint", "Products must have at least one part.");
+        ObservableList<model.Part> items = selectedPartsTableView.getItems();
+        if (items.size() == 1) {
+            ModelHelper.showNotificationDialog("Minimum part constraint", "Cannot Remove Part", "Products must have at least one part.", 
+                    Alert.AlertType.WARNING);
             return;
         }
         items.remove(part);
@@ -273,30 +293,35 @@ public class EditProductController implements Initializable {
     
     /**
      * Initializes the controller class.
+     * 
      * @param url
      * @param rb
      */
     @Override
     public void initialize(URL url, ResourceBundle rb) {
-        sInventoryLevelTableColumn.setCellValueFactory(new PropertyValueFactory<>(model.Part.PROP_STOCK));
-        sPartIdTableColumn.setCellValueFactory(new PropertyValueFactory<>(model.Part.PROP_ID));
-        sPartNameTableColumn.setCellValueFactory(new PropertyValueFactory<>(model.Part.PROP_NAME));
-        sPricePerUnitTableColumn.setCellValueFactory(new PropertyValueFactory<>(model.Part.PROP_PRICE));
-        uInventoryLevelTableColumn.setCellValueFactory(new PropertyValueFactory<>(model.Part.PROP_STOCK));
-        uPartIdTableColumn.setCellValueFactory(new PropertyValueFactory<>(model.Part.PROP_ID));
-        uPartNameTableColumn.setCellValueFactory(new PropertyValueFactory<>(model.Part.PROP_NAME));
-        uPricePerUnitTableColumn.setCellValueFactory(new PropertyValueFactory<>(model.Part.PROP_PRICE));
-        for (model.Part part : model.Inventory.getAllParts())
-            availableParts.add(part);
+        sInventoryLevelTableColumn.setCellValueFactory(new PropertyValueFactory<>(ModelHelper.PROP_STOCK));
+        sPartIdTableColumn.setCellValueFactory(new PropertyValueFactory<>(ModelHelper.PROP_ID));
+        sPartNameTableColumn.setCellValueFactory(new PropertyValueFactory<>(ModelHelper.PROP_NAME));
+        sPricePerUnitTableColumn.setCellValueFactory(new PropertyValueFactory<>(ModelHelper.PROP_PRICE));
+        uInventoryLevelTableColumn.setCellValueFactory(new PropertyValueFactory<>(ModelHelper.PROP_STOCK));
+        uPartIdTableColumn.setCellValueFactory(new PropertyValueFactory<>(ModelHelper.PROP_ID));
+        uPartNameTableColumn.setCellValueFactory(new PropertyValueFactory<>(ModelHelper.PROP_NAME));
+        uPricePerUnitTableColumn.setCellValueFactory(new PropertyValueFactory<>(ModelHelper.PROP_PRICE));
+        model.Inventory.getAllParts().forEach((part) -> availableParts.add(part));
     }
     
+    /**
+     * Configures controller to edit the properties of the specified product object.
+     * 
+     * @param product The Product to be edited.
+     */
     public void applyModel(model.Product product) {
         
         if (product == null)
             return;
-        modelId = product.getId();
+        currentProductId = product.getId();
         editProductLabel.setText("Modify Product");
-        idTextField.setText(String.valueOf(modelId = product.getId()));
+        idTextField.setText(String.valueOf(currentProductId = product.getId()));
         nameTextField.setText(product.getName());
         inventoryTextField.setText(String.valueOf(product.getStock()));
         priceTextField.setText(String.valueOf(product.getPrice()));
@@ -304,13 +329,13 @@ public class EditProductController implements Initializable {
         minTextField.setText(String.valueOf(product.getMin()));
         availableParts.clear();
         ObservableList<model.Part> selectedParts = FXCollections.observableArrayList();
-        for (model.Part part : model.Inventory.getAllParts()) {
-            if (product.containsAssociatedPart(part))
+        model.Inventory.getAllParts().forEach((part) -> {
+            if (ModelHelper.isAssociatedPartAdded(part, product))
                 selectedParts.add(part);
             else
                 availableParts.add(part);
-        }
+        });
         unselectedPartsTableView.setItems(availableParts);
-        selectedPartsPartsTableView.setItems(selectedParts);
+        selectedPartsTableView.setItems(selectedParts);
     }
 }

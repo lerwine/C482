@@ -7,20 +7,22 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 
 /**
- *Class which represents a product.
+ * Class which represents a product.
+ * 
  * @author Leonard T. Erwine
  */
-public class Product implements IdReferenceableObject {
-    private final ObservableList<Part> associatedParts = FXCollections.observableArrayList();
+public class Product /*implements InventoryItemModel*/ {
     private int id;
     private String name;
     private double price;
     private int stock;
     private int min;
     private int max;
+    private final ObservableList<Part> associatedParts = FXCollections.observableArrayList();
     
     /**
-     *Creates a new object to represent a Product.
+     * Creates a new object to represent a Product.
+     * 
      * @param id The unique identifier for the product. This can be set to a negative value if it's a new product, and a new identifier will be automatically set when it is added.
      * @param name The name of the product.
      * @param price The price of the product.
@@ -33,9 +35,9 @@ public class Product implements IdReferenceableObject {
     public Product(int id, String name, double price, int stock, int min, int max) throws NullPointerException, InvalidParameterException {
         this.id = id;
         if (name == null)
-            throw new NullPointerException("Product name cannot be null.");
+            throw new NullPointerException("Part name cannot be null.");
         if ((name = name.trim()).length() == 0)
-            throw new InvalidParameterException("Product name cannot be empty.");
+            throw new InvalidParameterException("Part name cannot be empty.");
         this.name = name;
         if (price < 0)
             throw new InvalidParameterException("Price cannot be less than zero.");
@@ -53,35 +55,38 @@ public class Product implements IdReferenceableObject {
         this.max = max;
     }
 
-    public static final String PROP_ID = "id";
-    
     /**
-     * @return The unique identifier value for the part.
+     * Gets the unique identifier for the current product.
+     * 
+     * @return The unique identifier value for the product.
      */
-    @Override
     public int getId() { return id; }
 
     /**
-     * @param id The new unique identifier value for the part.
+     * Sets the unique identifier for the current product.
+     * 
+     * @param id The new unique identifier value for the product.
      * @throws java.security.InvalidKeyException id is less than zero or another part already uses that id.
      */
-    @Override
+    //@Override
     public void setId(int id) throws InvalidKeyException {
         int oldId = this.id;
         // Ensure that the id is unique and valid.
-        Inventory.assertValidIdChange(this, id);
+        ModelHelper.assertValidIdChange(this, id);
         this.id = id;
-        propertyChangeSupport.firePropertyChange(PROP_ID, oldId, id);
+        propertyChangeSupport.firePropertyChange(ModelHelper.PROP_ID, oldId, id);
     }
-
-    public static final String PROP_NAME = "name";
     
     /**
+     * Gets the name of the current product.
+     * 
      * @return The name of the product
      */
     public String getName() { return name; }
 
     /**
+     * Sets the name for the current product.
+     * 
      * @param name The new name of the product.
      * @throws NullPointerException Name is null.
      * @throws java.security.InvalidParameterException Name is empty.
@@ -95,17 +100,19 @@ public class Product implements IdReferenceableObject {
         if (name.equals(oldName))
             return;
         this.name = name;
-        propertyChangeSupport.firePropertyChange(PROP_NAME, oldName, name);
+        propertyChangeSupport.firePropertyChange(ModelHelper.PROP_NAME, oldName, name);
     }
-
-    public static final String PROP_PRICE = "price";
     
     /**
+     * Gets the price of the current product.
+     * 
      * @return The price of the product.
      */
     public double getPrice() { return price; }
 
     /**
+     * Sets the price of the current product.
+     * 
      * @param price The new price of the product.
      * @throws java.security.InvalidParameterException Value is less than zero.
      */
@@ -117,35 +124,39 @@ public class Product implements IdReferenceableObject {
             throw new InvalidParameterException("Price cannot be less than zero.");
             
         this.price = price;
-        propertyChangeSupport.firePropertyChange(PROP_PRICE, oldPrice, price);
+        propertyChangeSupport.firePropertyChange(ModelHelper.PROP_PRICE, oldPrice, price);
     }
-
-    public static final String PROP_STOCK = "stock";
     
     /**
+     * Gets the number of products currently in stock.
+     * 
      * @return The number of products currently in stock.
      */
     public int getStock() { return stock; }
 
     /**
+     * Sets the number of products currently in stock.
+     * 
      * @param stock The new number of products currently in stock.
      * @throws java.security.InvalidParameterException Value is less than zero.
      */
     public void setStock(int stock) {
         int oldStock = this.stock;
         this.stock = stock;
-        propertyChangeSupport.firePropertyChange(PROP_STOCK, oldStock, stock);
+        propertyChangeSupport.firePropertyChange(ModelHelper.PROP_STOCK, oldStock, stock);
     }
-
-    public static final String PROP_MIN = "min";
     
     /**
-     * @return The minimum number of product in stock before the items need to be replenished.
+     * Gets the minimum number of products that can be in stock.
+     * 
+     * @return The minimum number of products that can be in stock.
      */
     public int getMin() { return min; }
 
     /**
-     * @param min The minimum number of product in stock before the items need to be replenished.
+     * Sets the minimum number of products that can be in stock.
+     * 
+     * @param min The minimum number of products that can be in stock.
      * @throws java.security.InvalidParameterException Value is less than zero or is not less than getMax().
      */
     public void setMin(int min) {
@@ -157,18 +168,20 @@ public class Product implements IdReferenceableObject {
         if (min >= this.max)
             throw new InvalidParameterException("Minimum stock level must be less than the maximum stock level.");
         this.min = min;
-        propertyChangeSupport.firePropertyChange(PROP_MIN, oldMin, min);
+        propertyChangeSupport.firePropertyChange(ModelHelper.PROP_MIN, oldMin, min);
     }
-
-    public static final String PROP_MAX = "max";
     
     /**
-     * @return The maximum number of products that should be in stock after replacement inventory is replenished.
+     * Gets the maximum number of products that can be in stock.
+     * 
+     * @return The maximum number of products that can be in stock.
      */
     public int getMax() { return max; }
 
     /**
-     * @param max The new maximum number of products that should be in stock after replacement inventory is replenished.
+     * Sets the maximum number of products that can be in stock.
+     * 
+     * @param max The new maximum number of products that can be in stock.
      * @throws java.security.InvalidParameterException Value is is not greater than getMin().
      */
     public void setMax(int max) {
@@ -178,12 +191,14 @@ public class Product implements IdReferenceableObject {
         if (max <= this.min)
             throw new InvalidParameterException("Maximum stock level must be greater than the maximum stock level.");
         this.max = max;
-        propertyChangeSupport.firePropertyChange(PROP_MAX, oldMax, max);
+        propertyChangeSupport.firePropertyChange(ModelHelper.PROP_MAX, oldMax, max);
     }
     
     /**
-     * @param min The minimum number of products in stock before the inventory needs to be replenished.
-     * @param max The maximum number of products that should be in stock after replacement inventory is replenished.
+     * Sets both the minimum and maximum number of products that can be in stock, validating the new range simultaneously.
+     * 
+     * @param min The minimum number of products that can be in stock.
+     * @param max The maximum number of products that can be in stock.
      * @throws java.security.InvalidParameterException min is less than zero or max is is not greater than min.
      */
     public void setMinMax(int min, int max) {
@@ -198,15 +213,17 @@ public class Product implements IdReferenceableObject {
                 return;
         } else {
             this.min = min;
-            propertyChangeSupport.firePropertyChange(PROP_MIN, oldMin, min);
+            propertyChangeSupport.firePropertyChange(ModelHelper.PROP_MIN, oldMin, min);
             if (oldMax == max)
                 return;
         }
         this.max = max;
-        propertyChangeSupport.firePropertyChange(PROP_MAX, oldMax, max);
+        propertyChangeSupport.firePropertyChange(ModelHelper.PROP_MAX, oldMax, max);
     }
     
     /**
+     * Associates a part with the current product.
+     * 
      * @param part Part to associate with the current Product.
      */
     public void addAssociatedPart(Part part) {
@@ -215,12 +232,14 @@ public class Product implements IdReferenceableObject {
         if (associatedParts.contains(part))
             return;
         // Make sure it exists in the 'all parts' list beforehand.
-        if (!Inventory.containsPart(part))
+        if (!ModelHelper.isPartAdded(part))
             Inventory.addPart(part);
         associatedParts.add(part);
     }
 
     /**
+     * Disassociates a part with the current product.
+     * 
      * @param part Part to disassociated from the current Product.
      */
     public void deleteAssociatedPart(Part part) {
@@ -229,18 +248,16 @@ public class Product implements IdReferenceableObject {
     }
     
     /**
-     * @param part Part to look for.
-     * @return true if the Part is associated with the current product; otherwise, false.
-     */
-    public boolean containsAssociatedPart(Part part) { return part != null && associatedParts.contains(part); }
-
-    /**
+     * Gets a list of parts associated with the current product.
+     * 
      * @return The list of parts associated with the current Product.
      */
     public ObservableList<Part> getAllAssociatedParts() { return associatedParts; }
 
     /**
-     *Re-populates the associated Part objects.
+     * Refreshes the list of Parts associated with the current product.
+     * 
+     * Re-populates the associated Part objects.
      * @param parts The Parts to be associated with the current Product.
      */
     public void setAllAssociatedParts(Iterable<Part> parts) {
@@ -252,7 +269,7 @@ public class Product implements IdReferenceableObject {
      *Ensures product has a valid unique identifier before it's added to the allProducts list.
      */
     public final void ensureId() {
-        if (Inventory.containsProduct(this))
+        if (ModelHelper.isProductAdded(this))
             return;
         int oldId = getId();
         if (oldId < 0 || Inventory.lookupProduct(oldId) != null) {
@@ -263,7 +280,7 @@ public class Product implements IdReferenceableObject {
                 for (int i = 0; i < nextId; i++) {
                     if (Inventory.lookupProduct(i) != null) {
                         id = i;
-                        propertyChangeSupport.firePropertyChange(PROP_ID, oldId, i);
+                        propertyChangeSupport.firePropertyChange(ModelHelper.PROP_ID, oldId, i);
                         return;
                     }
                 }
@@ -271,9 +288,12 @@ public class Product implements IdReferenceableObject {
                 do { nextId++; } while (Inventory.lookupProduct(nextId) != null);
             }
             id = nextId;
-            propertyChangeSupport.firePropertyChange(PROP_ID, oldId, nextId);
+            propertyChangeSupport.firePropertyChange(ModelHelper.PROP_ID, oldId, nextId);
         }
     }
     
+    /**
+     * Allows for more efficient detection of property value changes.
+     */
     public final transient PropertyChangeSupport propertyChangeSupport = new java.beans.PropertyChangeSupport(this);
 }

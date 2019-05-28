@@ -3,14 +3,16 @@ package model;
 import java.security.InvalidParameterException;
 
 /**
- *Represents a part that is out-sourced.
+ * Represents a part that is out-sourced.
+ * 
  * @author Leonard T. Erwine
  */
 public class Outsourced extends Part {
     private String companyName;
     
     /**
-     *Creates a new object to represent a part that is out-sourced.
+     * Creates a new object to represent a part that is out-sourced.
+     * 
      * @param id The unique identifier for the part. This can be set to a negative value if it's a new part, and a new identifier will be automatically set when it is added.
      * @param name The name of the part.
      * @param price The price of the part.
@@ -31,11 +33,15 @@ public class Outsourced extends Part {
     }
 
     /**
+     * Gets the name of the company that produced the part.
+     * 
      * @return The name of the company that produced the part.
      */
     public String getCompanyName() { return companyName; }
 
     /**
+     * Sets the name of the company that produced the part.
+     * 
      * @param companyName The new name for the company that produced the part.
      */
     public void setCompanyName(String companyName) {
@@ -47,8 +53,6 @@ public class Outsourced extends Part {
         if (companyName.equals(oldCompanyName))
             return;
         this.companyName = companyName;
-        propertyChangeSupport.firePropertyChange(PROP_COMPANYNAME, oldCompanyName, companyName);
+        propertyChangeSupport.firePropertyChange(ModelHelper.PROP_COMPANYNAME, oldCompanyName, companyName);
     }
-
-    public static final String PROP_COMPANYNAME = "companyName";
 }

@@ -1,17 +1,13 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package controller;
 
-import java.awt.event.KeyEvent;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Optional;
 import java.util.ResourceBundle;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
@@ -19,7 +15,7 @@ import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
-import javafx.scene.Parent;
+import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
@@ -29,16 +25,31 @@ import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
 import javafx.scene.control.cell.PropertyValueFactory;
-import javafx.stage.Modality;
 import javafx.stage.Stage;
-import javafx.stage.StageStyle;
 import model.Inventory;
+import model.ModelHelper;
 
 /**
  * Controller class for the Main Screen
+ * 
  * @author Leonard T. Erwine
  */
 public class MainScreenController implements Initializable {
+    /**
+     * The path of the View for Modify Part and Add Part.
+     */
+    public static final String VIEW_PATH_EDITPARTSCREEN = "/view/EditPartScreen.fxml";
+
+    /**
+     * The path of the View for Modify Product and Add Product.
+     */
+    public static final String VIEW_PATH_EDITPRODUCTSCREEN = "/view/EditProductScreen.fxml";
+
+    /**
+     * The path of the Main Screen View
+     */
+    public static final String VIEW_PATH_MAINSCREEN = "/view/MainScreen.fxml";
+    
     private boolean showingProductSearchResults = false;
     private boolean showingPartSearchResults = false;
     
@@ -95,60 +106,80 @@ public class MainScreenController implements Initializable {
 
     @FXML
     void onAddPartButtonClick(ActionEvent event) throws MalformedURLException, IOException {
-        Stage stage = (Stage)((Button)event.getSource()).getScene().getWindow();
-        stage.setScene(new Scene(FXMLLoader.load(getClass().getResource("/view/EditPartScreen.fxml"))));
-        stage.show();
+        // Default behavior for the EditPartController is to add a new Part.
+        changeScene((Node)event.getSource(), VIEW_PATH_EDITPARTSCREEN);
     }
 
     @FXML
-    void onAddProductButtonClick(ActionEvent event) throws MalformedURLException, IOException {
-        Stage stage = (Stage)((Button)event.getSource()).getScene().getWindow();
-        stage.setScene(new Scene(FXMLLoader.load(getClass().getResource("/view/EditProductScreen.fxml"))));
-        stage.show();
+    void onModifyPartButtonClick(ActionEvent event) throws MalformedURLException, IOException {
+        // Calling applyModel on the EditPartController configures it to edit the properties of the provided Part object.
+        model.Part sourcePart = partsTableView.getSelectionModel().getSelectedItem();
+        if (sourcePart == null)
+            ModelHelper.showNotificationDialog("Modify Part", "Nothing is selected", "You must select a part before it can be edited",
+                    Alert.AlertType.WARNING);
+        else
+            changeScene((Node)event.getSource(), VIEW_PATH_EDITPARTSCREEN, (EditPartController controller) -> {
+                controller.applyModel(sourcePart);
+            });
     }
 
     @FXML
     void onDeletePartButtonClick(ActionEvent event) {
         model.Part part = partsTableView.getSelectionModel().getSelectedItem();
         if (part == null) {
-            model.Inventory.showWarningAlert("No selection", "You must select a part before it can be deleted");
+            ModelHelper.showNotificationDialog("Delete Part", "Nothing is selected", "You must select a part before it can be deleted", Alert.AlertType.WARNING);
             return;
         }
-        
-        FilteredList<model.Product> violations = model.Inventory.getAllProducts().filtered(p -> {
-            ObservableList<model.Part> pl = p.getAllAssociatedParts();
-            return pl.size() == 1 && pl.contains(part);
-        });
+        // Get list of products where this is the only associated part.
+        FilteredList<model.Product> violations = ModelHelper.getWhereLastAssociatedProduct(part.getId());
         if (!violations.isEmpty()) {
             String message = "Removing this part would remove the last part from ";
             if (violations.size() == 1)
                 message += "1 product named \"" + violations.get(0).getName() + "\"";
             else {
-                message += String.valueOf(violations.size()) + " products:";
-                for (model.Product p : violations)
-                    message += "\n- " + p.getName();
+                message += String.valueOf(violations.size()) + " products:\n" + ModelHelper.joinStrings(violations,
+                        (model.Product p) -> "- " + p.getName(), "\n");
             }
-            model.Inventory.showWarningAlert("Minimum part Constraint Error", message);
+            ModelHelper.showNotificationDialog("Delete Part", "Minimum part Constraint Error", message, Alert.AlertType.WARNING);
             return;
         }
         int count = model.Inventory.getAllProducts().filtered(p -> p.getAllAssociatedParts().contains(part)).size();
         String contentText = "This action cannot be undone!\n\nAre you sure you want to delete this part?";
         if (count > 0)
-            contentText = ((count == 1) ? "1 product references this part, and it will be deleted from that one as well" : String.valueOf(count) + " products reference this part, and it will be deleted from those as well") + ".\r\n" + contentText;
-        Alert alert = new Alert(Alert.AlertType.WARNING, contentText, ButtonType.YES, ButtonType.NO);
-        alert.initStyle(StageStyle.UTILITY);
-        alert.setTitle("Confirm Delete");
-        alert.setHeaderText("Delete Part \"" + part.getName() + "\"");
-        Optional<ButtonType> result = alert.showAndWait();
+            contentText = ((count == 1) ? "1 product references this part, and it will be deleted from that one as well" :
+                    String.valueOf(count) + " products reference this part, and it will be deleted from those as well") + ".\r\n" + contentText;
+        
+        Optional<ButtonType> result = ModelHelper.showConfirmationDialog("Delete Part", "Confirm Delete Part \"" + part.getName() + "\"", contentText,
+                Alert.AlertType.CONFIRMATION);
         if (result.isPresent() && result.get() == ButtonType.YES)
             model.Inventory.deletePart(part);
+    }
+
+    @FXML
+    void onAddProductButtonClick(ActionEvent event) throws MalformedURLException, IOException {
+        // Default behavior for the EditProductController is to add a new controller.
+        changeScene((Node)event.getSource(), VIEW_PATH_EDITPRODUCTSCREEN);
+    }
+
+    @FXML
+    void onModifyProductButtonClick(ActionEvent event) {
+        // Calling applyModel on the EditProductController configures it to edit the properties of the provided Product object.
+        model.Product sourceProduct = productsTableView.getSelectionModel().getSelectedItem();
+        if (sourceProduct == null)
+            ModelHelper.showNotificationDialog("Modify Product", "Nothing is selected", "You must select a product before it can be edited",
+                    Alert.AlertType.WARNING);
+        else
+            changeScene((Node)event.getSource(), VIEW_PATH_EDITPRODUCTSCREEN, (EditProductController controller) -> {
+                controller.applyModel(sourceProduct);
+            });
     }
 
     @FXML
     void onDeleteProductButtonClick(ActionEvent event) {
         model.Product product = productsTableView.getSelectionModel().getSelectedItem();
         if (product == null) {
-            model.Inventory.showWarningAlert("No selection", "You must select a product before it can be deleted");
+            ModelHelper.showNotificationDialog("Delete Product", "Nothing is selected", "You must select a product before it can be deleted",
+                    Alert.AlertType.WARNING);
             return;
         }
         
@@ -158,21 +189,14 @@ public class MainScreenController implements Initializable {
             if (allProducts.filtered(p -> p.getAllAssociatedParts().contains(part)).size() < 2)
                 toBeOrphaned.add(part);
         }
-        Alert alert = new Alert(Alert.AlertType.WARNING, "This action cannot be undone!\n\nAre you sure you want to delete this product?",
-                ButtonType.YES, ButtonType.NO);
-        alert.initStyle(StageStyle.UTILITY);
-        alert.setTitle("Confirm Delete");
-        alert.setHeaderText("Delete Product \"" + product.getName() + "\"");
-        Optional<ButtonType> result = alert.showAndWait();
+        Optional<ButtonType> result = ModelHelper.showConfirmationDialog("Delete Product", "Confirm Delete Part \"" + product.getName() + "\"",
+                "This action cannot be undone!\n\nAre you sure you want to delete this product?", Alert.AlertType.CONFIRMATION);
         if (result.isPresent() && result.get() == ButtonType.YES) {
             if (toBeOrphaned.size() > 0) {
-                alert = new Alert(Alert.AlertType.CONFIRMATION, ((toBeOrphaned.size() == 1) ? "1 part" : String.valueOf(toBeOrphaned.size()) + " parts") +
+                result = ModelHelper.showConfirmationDialog("Delete Product", "Confirm Delete Part \"" + product.getName() + "\"",
+                        ((toBeOrphaned.size() == 1) ? "1 part" : String.valueOf(toBeOrphaned.size()) + " parts") +
                         "will not belong to any product after this product is deleted.\r\nDo you want to delete those parts as well?",
-                        ButtonType.YES, ButtonType.NO, ButtonType.CANCEL);
-                alert.initStyle(StageStyle.UTILITY);
-                alert.setTitle("Confirm Delete");
-                alert.setHeaderText("Delete Product \"" + product.getName() + "\"");
-                result = alert.showAndWait();
+                        Alert.AlertType.CONFIRMATION, true);
                 if (!(result.isPresent() && result.get() != ButtonType.CANCEL))
                     return;
                 if (result.get() == ButtonType.YES)
@@ -186,46 +210,44 @@ public class MainScreenController implements Initializable {
     @FXML
     void onExitClick(ActionEvent event) { ((Button)event.getSource()).getScene().getWindow().hide(); }
 
-    @FXML
-    void onModifyPartButtonClick(ActionEvent event) throws MalformedURLException, IOException {
-        model.Part sourcePart = partsTableView.getSelectionModel().getSelectedItem();
-        if (sourcePart == null) {
-            model.Inventory.showWarningAlert("No selection", "You must select a part before it can be edited");
+    /**
+     * Utility method to initialize the controller and switch scenes.
+     * 
+     * @param <T> The type of controller to initialize.
+     * @param eventSource The source Node for the event.
+     * @param path The path of the FXML file to load.
+     * @param initializeController Function for initializing the controller.
+     */
+    public static <T> void changeScene(Node eventSource, String path, java.util.function.Consumer<T> initializeController) {
+        FXMLLoader loader = new FXMLLoader();
+        loader.setLocation(MainScreenController.class.getResource(path));
+        Stage stage = (Stage)eventSource.getScene().getWindow();
+        try {
+            stage.setScene(new Scene(loader.load()));
+            T controller = loader.getController();
+            if (initializeController != null)
+                initializeController.accept(controller);
+        } catch (IOException ex) {
+            Logger.getLogger(MainScreenController.class.getName()).log(Level.SEVERE, null, ex);
             return;
         }
-        FXMLLoader loader = new FXMLLoader();
-        loader.setLocation(getClass().getResource("/view/EditPartScreen.fxml"));
-        Stage stage = (Stage)((Button)event.getSource()).getScene().getWindow();
-        stage.setScene(new Scene(loader.load()));
-        EditPartController controller = loader.getController();
-        controller.applyModel(sourcePart);
         stage.show();
     }
-
-    @FXML
-    void onModifyProductButtonClick(ActionEvent event) throws MalformedURLException, IOException {
-        model.Product sourceProduct = productsTableView.getSelectionModel().getSelectedItem();
-        if (sourceProduct == null) {
-            model.Inventory.showWarningAlert("No selection", "You must select a part before it can be edited");
-            return;
-        }
-        FXMLLoader loader = new FXMLLoader();
-        loader.setLocation(getClass().getResource("/view/EditProductScreen.fxml"));
-        Stage stage = (Stage)((Button)event.getSource()).getScene().getWindow();
-        stage.setScene(new Scene(loader.load()));
-        EditProductController controller = loader.getController();
-        controller.applyModel(sourceProduct);
-        stage.show();
-    }
-
-    public static void changeToMainScreen(Scene scene, Class<?> c) throws MalformedURLException, IOException {
-        Stage stage = (Stage)scene.getWindow();
-        stage.setScene(new Scene(FXMLLoader.load(c.getResource("/view/MainScreen.fxml"))));
-        stage.show();
+    
+    /**
+     * Utility method to change switch to another scene.
+     * 
+     * @param eventSource The source node for the event.
+     * @param path The path of the FXML file to load.
+     */
+    public static void changeScene(Node eventSource, String path) {
+        changeScene(eventSource, path, null);
     }
     
     @FXML
     void onPartsSearchButtonClick(ActionEvent event) {
+        // If showingPartSearchResults is true, then the search text box was disabled, and the table view was showing search results,
+        // which means we need to show all items and enable the search box.
         if (showingPartSearchResults) {
             partsTableView.setItems(model.Inventory.getAllParts());
             noPartMatchesLabel.setVisible(false);
@@ -236,9 +258,11 @@ public class MainScreenController implements Initializable {
             partsSearchTextField.setText("");
             return;
         }
+        
+        // Trim search text and convert it to lower case ahead of time.
         String searchText = partsSearchTextField.getText().trim().toLowerCase();
         if (searchText.length() == 0) {
-            model.Inventory.showWarningAlert("No text", "Enter a name to search for...");
+            ModelHelper.showNotificationDialog("No text", "Nothing to search", "Enter a name to search for...", Alert.AlertType.WARNING);
             return;
         }
         ObservableList<model.Part> searchResults = FXCollections.observableArrayList();
@@ -273,7 +297,7 @@ public class MainScreenController implements Initializable {
         }
         String searchText = productsSearchTextField.getText().trim().toLowerCase();
         if (searchText.length() == 0) {
-            model.Inventory.showWarningAlert("No text", "Enter a name to search for...");
+            ModelHelper.showNotificationDialog("No text", "Nothing to search", "Enter a name to search for...", Alert.AlertType.WARNING);
             return;
         }
         ObservableList<model.Product> searchResults = FXCollections.observableArrayList();

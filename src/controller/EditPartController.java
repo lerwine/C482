@@ -1,37 +1,30 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package controller;
 
-import java.io.IOException;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.Optional;
 import java.util.ResourceBundle;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
+import javafx.scene.Node;
 import javafx.scene.control.Alert;
-import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.Label;
 import javafx.scene.control.RadioButton;
 import javafx.scene.control.TextField;
 import javafx.stage.StageStyle;
-import model.Inventory;
+import javafx.util.Pair;
+import model.ModelHelper;
 
 /**
- * FXML Controller class
+ * FXML Controller class for adding and modifying Parts.
  *
- * @author lerwi
+ * @author Leonard T. Erwine
  */
 public class EditPartController implements Initializable {
-    private int modelId = -1;
+    private int currentPartId = -1;
     private String lastCompanyOrMachine = "";
     
     @FXML
@@ -69,18 +62,10 @@ public class EditPartController implements Initializable {
 
     @FXML
     void onCancelButtonClick(ActionEvent event) {
-        Alert alert = new Alert(Alert.AlertType.WARNING, "All changes will be lost. Are you sure you want to cancel?", ButtonType.YES, ButtonType.NO);
-        alert.initStyle(StageStyle.UTILITY);
-        alert.setTitle("Cancel changes");
-        alert.setHeaderText("Confirm Cancel");
-        Optional<ButtonType> result = alert.showAndWait();
-        if (result.isPresent() && result.get() == ButtonType.YES) {
-            try {
-                MainScreenController.changeToMainScreen(((Button)event.getSource()).getScene(), getClass());
-            } catch (IOException ex) {
-                Logger.getLogger(EditProductController.class.getName()).log(Level.SEVERE, null, ex);
-            }
-        }
+        Optional<ButtonType> result = ModelHelper.showConfirmationDialog("Cancel Changes", "All changes will be lost",
+                "Are you sure you want to cancel?", Alert.AlertType.CONFIRMATION);
+        if (result.isPresent() && result.get() == ButtonType.YES)
+            MainScreenController.changeScene((Node)event.getSource(), MainScreenController.VIEW_PATH_MAINSCREEN);
     }
 
     @FXML
@@ -89,187 +74,211 @@ public class EditPartController implements Initializable {
         String current = companyOrMachineTextField.getText();
         companyOrMachineTextField.setText(lastCompanyOrMachine);
         lastCompanyOrMachine = current;
-        String text = (this.inHouseRadioButton.isSelected()) ? LABEL_MACHINEID : LABEL_COMPANYNAME;
+        String text = (this.inHouseRadioButton.isSelected()) ? LABELTEXT_MACHINEID : LABELTEXT_COMPANYNAME;
         companyOrMachineLabel.setText(text);
         companyOrMachineTextField.setAccessibleText(text);
     }
     
     @FXML
     void onSaveButtonClick(ActionEvent event) {
-        model.ValidationInfo errors = new model.ValidationInfo();
-        model.Part part = (modelId < 0) ? null : model.Inventory.lookupPart(modelId);
+        // Create list to store validation errors.
+        ArrayList<Pair<String, String>> errors = new ArrayList<>();
+        
+        // This gets the existing (unmodified) part being edited, or null if a new part is being added.
+        model.Part currentPart = (currentPartId < 0) ? null : model.Inventory.lookupPart(currentPartId);
+        
+        // Validate that part name is not empty and trim extraneous white space.
         if (nameTextField.getText().trim().length() == 0)
-            errors.add(nameTextField.accessibleTextProperty().getValue(), "Text cannot be empty.");
+            errors.add(new Pair(nameTextField.getAccessibleText(), ": Text cannot be empty."));
         
-        double price = 0.0;
-        String s = priceTextField.getText().trim();
-        if (s.length() == 0)
-            errors.add(priceTextField.accessibleTextProperty().getValue(), "Value cannot be empty.");
-        else {
-            try {
-                price = Double.parseDouble(s);
-                if (price < 0.0)
-                    errors.add(priceTextField.accessibleTextProperty().getValue(), "Value cannot be less than zero");
-            } catch (NumberFormatException e) {
-                errors.add(priceTextField.accessibleTextProperty().getValue(), "Invalid number value");
-            }
-            if (part != null && price > part.getPrice()) {
-                FilteredList<model.Product> violations = model.Inventory.getAllProducts().filtered(p ->
-                        p.getAllAssociatedParts().stream().anyMatch(a -> a.getId() == modelId) &&
-                                p.getAllAssociatedParts().stream().mapToDouble(a -> a.getPrice()).sum() > p.getPrice());
-                if (!violations.isEmpty()) {
-                    String message = "Increasing the price on this part would cause the part sum price to exceed the product price for ";
-                    if (violations.size() == 1)
-                        message = "1 product named \"" + violations.get(0).getName() + "\".";
-                    else {
-                        message = String.valueOf(violations.size()) + " products:";
-                        for (model.Product p : violations)
-                            message += "\n- " + p.getName();
-                    }
-                    errors.add(priceTextField.accessibleTextProperty().getValue(), message);
+        // Attempt to parse appropriate number values for other fields.
+        Optional<Double> price = ModelHelper.tryConvertToDouble(priceTextField.getText());
+        Optional<Integer> min = ModelHelper.tryConvertToInteger(minTextField.getText());
+        Optional<Integer> max = ModelHelper.tryConvertToInteger(maxTextField.getText());
+        Optional<Integer> stock = ModelHelper.tryConvertToInteger(inventoryTextField.getText());
+        
+        // Validate that Min field contains an integer value that is greater than or equal to zero.
+        if (min.isPresent()) {
+            if (min.get() < 0)
+                errors.add(new Pair(minTextField.getAccessibleText(), "Value cannot be less than zero."));
+        } else if (minTextField.getText().trim().length() == 0)
+            errors.add(new Pair(minTextField.getAccessibleText(), "Value cannot be empty."));
+        else
+            errors.add(new Pair(minTextField.getAccessibleText(), "Invalid number value."));
+        
+        // Validate that Max field contains an integer value that is greater than or equal to the Min field.
+        if (max.isPresent()) {
+            if (max.get() < 0)
+                errors.add(new Pair(maxTextField.getAccessibleText(), "Value cannot be less than zero."));
+            else if (min.isPresent() && min.get() > max.get())
+                errors.add(new Pair(maxTextField.getAccessibleText(), "Value cannot be greater than " + minTextField.getAccessibleText() + "."));
+        } else if (maxTextField.getText().trim().length() == 0)
+            errors.add(new Pair(maxTextField.getAccessibleText(), "Value cannot be empty."));
+        else
+            errors.add(new Pair(maxTextField.getAccessibleText(), "Invalid number value."));
+        
+        // Validate that the Inv field contains an integer value that is not less than the Min field and not greater than the Max field.
+        if (stock.isPresent()) {
+            if (stock.get() < 0)
+                errors.add(new Pair(inventoryTextField.getAccessibleText(), "Value cannot be less than zero."));
+            else if (min.isPresent() && (!max.isPresent() || max.get() >= min.get()) && stock.get() < min.get())
+                errors.add(new Pair(inventoryTextField.getAccessibleText(), "Value cannot be less than " + minTextField.getAccessibleText() + "."));
+            else if (max.isPresent() && stock.get() > max.get())
+                errors.add(new Pair(inventoryTextField.getAccessibleText(), "Value cannot be greater than " + maxTextField.getAccessibleText() + "."));
+        } else if (inventoryTextField.getText().trim().length() == 0)
+            errors.add(new Pair(inventoryTextField.getAccessibleText(), "Value cannot be empty."));
+        else
+            errors.add(new Pair(inventoryTextField.getAccessibleText(), "Invalid number value."));
+        
+        // Validate that the Price field contains a floating-point number that is not less than zero.
+        if (price.isPresent()) {
+            if (price.get() < 0.0)
+                errors.add(new Pair(priceTextField.getAccessibleText(), "Price cannot be less than zero."));
+            else if (currentPart != null && currentPartId >= 0) {
+                FilteredList<model.Product> potentialPriceViolations = ModelHelper.getPotentialPriceSumViolations(currentPartId, price.get());
+                if (!potentialPriceViolations.isEmpty()) {
+                    if (potentialPriceViolations.size() == 1)
+                        errors.add(new Pair(priceTextField.getAccessibleText(),
+                                "Changing the price/cost of the current part will cause the sum of the proce/cost of associated parts for 1 product (" +
+                                potentialPriceViolations.get(0).getName() + ") to exceed the price of the product itself."));
+                    else
+                        errors.add(new Pair(priceTextField.getAccessibleText(), 
+                                "Changing the price/cost of the current part will cause the sum of the proce/cost of associated parts for " +
+                                String.valueOf(potentialPriceViolations.size()) + " products (" + ModelHelper.joinStrings(potentialPriceViolations,
+                                        (model.Product p) -> p.getName(), "; ") + ") to exceed the price of those products."));
                 }
             }
-        }
-        int stock = 0;
-        s = inventoryTextField.getText().trim();
-        if (s.length() == 0)
-            errors.add(inventoryTextField.accessibleTextProperty().getValue(), "Value cannot be empty.");
-        else {
-            try {
-                stock = Integer.parseInt(s);
-                if (stock < 0)
-                    errors.add(inventoryTextField.accessibleTextProperty().getValue(), "Value cannot be less than zero");
-            } catch (NumberFormatException e) {
-                errors.add(inventoryTextField.accessibleTextProperty().getValue(), "Invalid number value");
-            }
-        }
-        int min = 0;
-        s = minTextField.getText().trim();
-        if (s.length() == 0)
-            errors.add(minTextField.accessibleTextProperty().getValue(), "Value cannot be empty.");
-        else {
-            try {
-                min = Integer.parseInt(s);
-                if (min < 0)
-                    errors.add(minTextField.accessibleTextProperty().getValue(), "Value cannot be less than zero");
-            } catch (NumberFormatException e) {
-                errors.add(minTextField.accessibleTextProperty().getValue(), "Invalid number value");
-            }
-        }
-        int max = 0;
-        s = maxTextField.getText().trim();
-        if (s.length() == 0)
-            errors.add(maxTextField.accessibleTextProperty().getValue(), "Value cannot be empty.");
-        else {
-            try {
-                max = Integer.parseInt(s);
-                if (max <= min)
-                    errors.add(maxTextField.accessibleTextProperty().getValue(), "Value must be greater than the minimum inventory count.");
-            } catch (NumberFormatException e) {
-                errors.add(maxTextField.accessibleTextProperty().getValue(), "Invalid number value");
-            }
-        }
+        } else if (priceTextField.getText().trim().length() == 0)
+            errors.add(new Pair(priceTextField.getAccessibleText(), "Value cannot be empty."));
+        else
+            errors.add(new Pair(priceTextField.getAccessibleText(), "Invalid number value."));
         
-        int machineId = 0;
-        s = companyOrMachineTextField.getText().trim();
+        String companyName = companyOrMachineTextField.getText();
+        Optional<Integer> machineId;
         if (inHouseRadioButton.isSelected()) {
-            if (s.length() == 0)
-                errors.add(companyOrMachineTextField.accessibleTextProperty().getValue(), "Value cannot be empty.");
-            else {
-                try { machineId = Integer.parseInt(s); }
-                catch (NumberFormatException e) {
-                    errors.add(companyOrMachineTextField.accessibleTextProperty().getValue(), "Invalid number value");
-                }
-            }
-        } else if (s.length() == 0)
-            errors.add(companyOrMachineTextField.accessibleTextProperty().getValue(), "Value cannot be empty.");
-        
-        // If this returns true, then errors were presented in a popup.
-        if (errors.showWarningAlert("Invalid part properties"))
-            return;
-        
-        if (part == null) {
-            part = (inHouseRadioButton.isSelected()) ? new model.InHouse(modelId, nameTextField.getText(), price, stock, min, max, machineId) :
-                    new model.Outsourced(modelId, nameTextField.getText(), price, stock, min, max, s);
-            model.Inventory.addPart(part);
+            // Validate that the Machine ID field contains a number value that is not less than zero.
+            machineId = ModelHelper.tryConvertToInteger(companyName);
+            if (machineId.isPresent()) {
+                if (machineId.get() < 0)
+                    errors.add(new Pair(companyOrMachineTextField.getAccessibleText(), "Value cannot be less than zero."));
+            } else if (companyOrMachineTextField.getText().trim().length() == 0)
+                errors.add(new Pair(companyOrMachineTextField.getAccessibleText(), "Value cannot be empty."));
+            else
+                errors.add(new Pair(companyOrMachineTextField.getAccessibleText(), "Invalid number value."));
         } else {
-            if (inHouseRadioButton.isSelected()) {
-                if (part instanceof model.Outsourced) {
-                    model.Inventory.updatePart(model.Inventory.getAllParts().indexOf(part),
-                        new model.InHouse(modelId, nameTextField.getText(), price, stock, min, max, machineId));
-                    try {
-                        MainScreenController.changeToMainScreen(((Button)event.getSource()).getScene(), getClass());
-                    } catch (IOException ex) {
-                        Logger.getLogger(EditProductController.class.getName()).log(Level.SEVERE, null, ex);
-                    }
-                    return;
-                }
-                ((model.InHouse)part).setMachineId(machineId);
-            } else {
-                if (part instanceof model.InHouse) {
-                    model.Inventory.updatePart(model.Inventory.getAllParts().indexOf(part),
-                        new model.Outsourced(modelId, nameTextField.getText(), price, stock, min, max, s));
-                    try {
-                        MainScreenController.changeToMainScreen(((Button)event.getSource()).getScene(), getClass());
-                    } catch (IOException ex) {
-                        Logger.getLogger(EditProductController.class.getName()).log(Level.SEVERE, null, ex);
-                    }
-                    return;
-                }
-                ((model.Outsourced)part).setCompanyName(s);
-            }
-            part.setName(nameTextField.getText());
-            part.setPrice(price);
-            part.setStock(stock);
-            part.setMinMax(min, max);
+            machineId = Optional.empty();
+            // Validate that the Company Name field is nto empty.
+            if ((companyName = companyName.trim()).length() == 0)
+                errors.add(new Pair(companyOrMachineTextField.getAccessibleText(), "Text cannot be empty."));
         }
         
-        try {
-            MainScreenController.changeToMainScreen(((Button)event.getSource()).getScene(), getClass());
-        } catch (IOException ex) {
-            Logger.getLogger(EditProductController.class.getName()).log(Level.SEVERE, null, ex);
+        // If we have errors, show alert dialog and return without saving or moving away from the current screen.
+        if (!errors.isEmpty()) {
+            Alert alert = new Alert(Alert.AlertType.WARNING);
+            alert.initStyle(StageStyle.UTILITY);
+            if (errors.size() == 1) {
+                alert.setTitle("Field Value Error");
+                alert.setHeaderText("Error in \"" + errors.get(0).getKey() + "\"");
+                alert.setContentText(errors.get(0).getValue());
+            } else {
+                alert.setTitle(String.valueOf("Errors in " + errors.size()) + " Fields");
+                alert.setHeaderText("Error in \"" + errors.get(0).getKey() + "\"");
+                alert.setContentText(ModelHelper.joinStrings(errors, (Pair<String, String> p) -> p.getKey() + ": " + p.getValue(), "\n"));
+            }
+            alert.showAndWait();
+            return;
         }
+        
+        if (currentPart == null) {
+            // Create new part object and add it to the inventory.
+            currentPart = (inHouseRadioButton.isSelected()) ?
+                    new model.InHouse(currentPartId, nameTextField.getText(), price.get(), stock.get(), min.get(), max.get(), machineId.get()) :
+                    new model.Outsourced(currentPartId, nameTextField.getText(), price.get(), stock.get(), min.get(), max.get(), companyName);
+            model.Inventory.addPart(currentPart);
+        } else {
+            // currentPart contains the object from the inventory that has not yet been modified.
+            if (inHouseRadioButton.isSelected()) {
+                // If the current part from inventory is not a InHouse object, then we'll need to replace it. Otherwise, we can directly update it.
+                if (currentPart instanceof model.Outsourced) {
+                    model.Inventory.updatePart(model.Inventory.getAllParts().indexOf(currentPart),
+                        new model.InHouse(currentPartId, nameTextField.getText(), price.get(), stock.get(), min.get(), max.get(), machineId.get()));
+                    MainScreenController.changeScene((Node)event.getSource(), MainScreenController.VIEW_PATH_MAINSCREEN);
+                    return;
+                }
+                // Update property that only applies to Inhouse type.
+                ((model.InHouse)currentPart).setMachineId(machineId.get());
+            } else {
+                // If the current part from inventory is not an Outsourced object, then we'll need to replace it. Otherwise, we can directly update
+                if (currentPart instanceof model.InHouse) {
+                    model.Inventory.updatePart(model.Inventory.getAllParts().indexOf(currentPart),
+                        new model.Outsourced(currentPartId, nameTextField.getText(), price.get(), stock.get(), min.get(), max.get(), companyName));
+                    MainScreenController.changeScene((Node)event.getSource(), MainScreenController.VIEW_PATH_MAINSCREEN);
+                    return;
+                }
+                // Update property that only applies to Outsourced type.
+                ((model.Outsourced)currentPart).setCompanyName(companyName);
+            }
+            // Update remainder of properties.
+            currentPart.setName(nameTextField.getText());
+            currentPart.setPrice(price.get());
+            currentPart.setStock(stock.get());
+            currentPart.setMinMax(min.get(), max.get());
+        }
+        
+        // Change back to the main screen.
+        MainScreenController.changeScene((Node)event.getSource(), MainScreenController.VIEW_PATH_MAINSCREEN);
     }
 
     /**
      * Initializes the controller class.
+     * 
+     * @param url The location used to resolve relative paths for the root object or <tt>null</tt> if the location is not known.
+     * @param rb The resources used to localize the root object, or <tt>null</tt> if the root object was not localized.
      */
     @Override
     public void initialize(URL url, ResourceBundle rb) {
         inHouseRadioButton.selectedProperty().setValue(true);
         outsourcedRadioButton.selectedProperty().setValue(false);
-        companyOrMachineLabel.setText(LABEL_MACHINEID);
-        companyOrMachineTextField.setAccessibleText(LABEL_MACHINEID);
+        companyOrMachineLabel.setText(LABELTEXT_MACHINEID);
+        companyOrMachineTextField.setAccessibleText(LABELTEXT_MACHINEID);
     }
   
+    /**
+     * Prepares controller for editing an existing part.
+     * 
+     * @param part The part to be edited.
+     */
     public void applyModel(model.Part part) {
         if (part == null)
             return;
+        // Save the unique identifier of the part being edited. This can be -1 if it is a new part.
+        currentPartId = part.getId();
         
         editPartLabel.setText("Modify Part");
-        idTextField.setText(String.valueOf(modelId = part.getId()));
+        idTextField.setText(String.valueOf(currentPartId));
         nameTextField.setText(part.getName());
-        inventoryTextField.setText(String.valueOf(part.getStock()));
         priceTextField.setText(String.valueOf(part.getPrice()));
         maxTextField.setText(String.valueOf(part.getMax()));
         minTextField.setText(String.valueOf(part.getMin()));
+        inventoryTextField.setText(String.valueOf(part.getStock()));
+        
         if (part instanceof model.InHouse) {
             inHouseRadioButton.selectedProperty().setValue(true);
             outsourcedRadioButton.selectedProperty().setValue(false);
             model.InHouse inHouse = (model.InHouse)part;
-            companyOrMachineLabel.setText(LABEL_MACHINEID);
-            companyOrMachineTextField.setAccessibleText(LABEL_MACHINEID);
+            companyOrMachineLabel.setText(LABELTEXT_MACHINEID);
+            companyOrMachineTextField.setAccessibleText(LABELTEXT_MACHINEID);
             companyOrMachineTextField.setText(String.valueOf(inHouse.getMachineId()));
         } else {
             outsourcedRadioButton.selectedProperty().setValue(true);
             inHouseRadioButton.selectedProperty().setValue(false);
             model.Outsourced outsourced = (model.Outsourced)part;
-            companyOrMachineLabel.setText(LABEL_COMPANYNAME);
-            companyOrMachineTextField.setAccessibleText(LABEL_COMPANYNAME);
+            companyOrMachineLabel.setText(LABELTEXT_COMPANYNAME);
+            companyOrMachineTextField.setAccessibleText(LABELTEXT_COMPANYNAME);
             companyOrMachineTextField.setText(outsourced.getCompanyName());
         }
     }
     
-    private static final String LABEL_MACHINEID = "Machine ID";
-    private static final String LABEL_COMPANYNAME = "Company Name";  
+    private static final String LABELTEXT_MACHINEID = "Machine ID";
+    private static final String LABELTEXT_COMPANYNAME = "Company Name";
 }

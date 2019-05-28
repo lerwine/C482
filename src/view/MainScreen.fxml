@@ -15,7 +15,7 @@
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Font?>
 
-<VBox prefHeight="600.0" prefWidth="900.0" stylesheets="@defaultStyleSheet.css" xmlns="http://javafx.com/javafx/8.0.171" xmlns:fx="http://javafx.com/fxml/1" fx:controller="controller.MainScreenController">
+<VBox prefHeight="600.0" prefWidth="1131.0" stylesheets="@defaultStyleSheet.css" xmlns="http://javafx.com/javafx/8.0.171" xmlns:fx="http://javafx.com/fxml/1" fx:controller="controller.MainScreenController">
    <children>
       <Label text="Inventory Management System" GridPane.halignment="CENTER">
          <font>
@@ -47,9 +47,9 @@
                             <TableView fx:id="partsTableView" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
                               <columns>
                                  <TableColumn fx:id="partIdTableColumn" editable="false" minWidth="-1.0" prefWidth="75.0" text="Part ID" />
-                                 <TableColumn fx:id="partNameTableColumn" editable="false" prefWidth="93.0" text="Part Name" />
-                                 <TableColumn fx:id="partInventoryLevelTableColumn" editable="false" prefWidth="117.0" text="Inventory Level" />
-                                 <TableColumn fx:id="partPriceTableColumn" editable="false" prefWidth="142.0" text="Price / Cost per Unit" />
+                                 <TableColumn fx:id="partNameTableColumn" editable="false" prefWidth="183.0" text="Part Name" />
+                                 <TableColumn fx:id="partInventoryLevelTableColumn" editable="false" prefWidth="121.0" text="Inventory Level" />
+                                 <TableColumn fx:id="partPriceTableColumn" editable="false" prefWidth="149.0" text="Price / Cost per Unit" />
                               </columns>
                             </TableView>
                             <Label fx:id="noPartMatchesLabel" alignment="CENTER" contentDisplay="CENTER" text="No matching items found." textAlignment="CENTER" visible="false" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" />
@@ -100,9 +100,9 @@
                             <TableView fx:id="productsTableView" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
                               <columns>
                                 <TableColumn fx:id="productIdTableColumn" editable="false" prefWidth="82.0" text="Product ID" />
-                                <TableColumn fx:id="productNameTableColumn" editable="false" prefWidth="133.0" text="Product Name" />
-                                <TableColumn fx:id="productInventoryLevelTableColumn" editable="false" prefWidth="112.0" text="Inventory Level" />
-                                <TableColumn fx:id="productPriceTableColumn" editable="false" prefWidth="101.0" text="Price Per Unit" />
+                                <TableColumn fx:id="productNameTableColumn" editable="false" prefWidth="216.0" text="Product Name" />
+                                <TableColumn fx:id="productInventoryLevelTableColumn" editable="false" prefWidth="123.0" text="Inventory Level" />
+                                <TableColumn fx:id="productPriceTableColumn" editable="false" prefWidth="106.0" text="Price Per Unit" />
                               </columns>
                             </TableView>
                             <Label fx:id="noProductMatchesLabel" alignment="CENTER" contentDisplay="CENTER" text="No matching items found." textAlignment="CENTER" visible="false" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" />

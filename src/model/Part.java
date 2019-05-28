@@ -5,20 +5,23 @@ import java.security.InvalidKeyException;
 import java.security.InvalidParameterException;
 import javafx.collections.ObservableList;
 
-/*
- *Base class for In-House and Out-sourced parts.
+/**
+ * Base class for In-House and Out-sourced parts.
+ * 
  * @author Leonard T. Erwine
  */
-public abstract class Part implements IdReferenceableObject {
+public abstract class Part /*implements InventoryItemModel*/ {
     private int id;
     private String name;
     private double price;
     private int stock;
     private int min;
     private int max;
-
+    
+    
     /**
-     *Initializes a new object to represent a Part.
+     * Initializes a new object to represent a Part.
+     * 
      * @param id The unique identifier for the part. This can be set to a negative value if it's a new part, and a new identifier will be automatically set when it is added.
      * @param name The name of the part.
      * @param price The price of the part.
@@ -52,32 +55,38 @@ public abstract class Part implements IdReferenceableObject {
     }
 
     /**
+     * Gets the unique identifier for the current part.
+     * 
      * @return The unique identifier value for the part.
      */
-    @Override
     public int getId() { return id; }
 
     /**
+     * Sets the unique identifier for the current part.
+     * 
      * @param id The new unique identifier value for the part.
      * @throws java.security.InvalidKeyException id is less than zero or another part already uses that id.
      */
-    @Override
     public void setId(int id) throws InvalidKeyException {
         int oldId = this.id;
         if (oldId == id)
             return;
         // Ensure that the id is unique and valid.
-        Inventory.assertValidIdChange(this, id);
+        ModelHelper.assertValidIdChange(this, id);
         this.id = id;
-        propertyChangeSupport.firePropertyChange(PROP_ID, oldId, id);
+        propertyChangeSupport.firePropertyChange(ModelHelper.PROP_ID, oldId, id);
     }
 
     /**
+     * Gets the name of the current part.
+     * 
      * @return The name of the part
      */
     public String getName() { return name; }
 
     /**
+     * Sets the name for the current part.
+     * 
      * @param name The new name of the part.
      * @throws NullPointerException Name is null.
      * @throws java.security.InvalidParameterException Name is empty.
@@ -91,15 +100,19 @@ public abstract class Part implements IdReferenceableObject {
         if (name.equals(oldName))
             return;
         this.name = name;
-        propertyChangeSupport.firePropertyChange(PROP_NAME, oldName, name);
+        propertyChangeSupport.firePropertyChange(ModelHelper.PROP_NAME, oldName, name);
     }
 
     /**
+     * Gets the price / cost of the part.
+     * 
      * @return The price of the part.
      */
     public double getPrice() { return price; }
 
     /**
+     * Sets the price / cost of the part.
+     * 
      * @param price The new price of the part.
      * @throws java.security.InvalidParameterException Value is less than zero.
      */
@@ -111,31 +124,39 @@ public abstract class Part implements IdReferenceableObject {
             throw new InvalidParameterException("Price cannot be less than zero.");
             
         this.price = price;
-        propertyChangeSupport.firePropertyChange(PROP_PRICE, oldPrice, price);
+        propertyChangeSupport.firePropertyChange(ModelHelper.PROP_PRICE, oldPrice, price);
     }
 
     /**
+     * Gets the number of parts currently in stock.
+     * 
      * @return The number of parts currently in stock.
      */
     public int getStock() { return stock; }
 
     /**
+     * Sets the number of parts currently in stock.
+     * 
      * @param stock The new number of parts currently in stock.
      * @throws java.security.InvalidParameterException Value is less than zero.
      */
     public void setStock(int stock) {
         int oldStock = this.stock;
         this.stock = stock;
-        propertyChangeSupport.firePropertyChange(PROP_STOCK, oldStock, stock);
+        propertyChangeSupport.firePropertyChange(ModelHelper.PROP_STOCK, oldStock, stock);
     }
 
     /**
-     * @return The minimum number of parts in stock before the items need to be re-ordered or replaced.
+     * Gets the minimum number of parts that can be in stock.
+     * 
+     * @return The minimum number of parts that can be in stock.
      */
     public int getMin() { return min; }
 
     /**
-     * @param min The new minimum number of parts in stock before the items need to be re-ordered or replaced.
+     * Sets the minimum number of parts that can be in stock.
+     * 
+     * @param min The new minimum number of parts that can be in stock.
      * @throws java.security.InvalidParameterException Value is less than zero or is not less than getMax().
      */
     public void setMin(int min) {
@@ -147,16 +168,20 @@ public abstract class Part implements IdReferenceableObject {
         if (min >= this.max)
             throw new InvalidParameterException("Minimum stock level must be less than the maximum stock level.");
         this.min = min;
-        propertyChangeSupport.firePropertyChange(PROP_MIN, oldMin, min);
+        propertyChangeSupport.firePropertyChange(ModelHelper.PROP_MIN, oldMin, min);
     }
 
     /**
-     * @return The maximum number of parts that should be in stock after replacement inventory is re-ordered or replaced.
+     * Gets the maximum number of parts that can be in stock.
+     * 
+     * @return The maximum number of parts that can be in stock.
      */
     public int getMax() { return max; }
 
     /**
-     * @param max The new maximum number of parts that should be in stock after replacement inventory is re-ordered or replaced.
+     * Set the maximum number of parts that can be in stock.
+     * 
+     * @param max The new maximum number of parts that can be in stock.
      * @throws java.security.InvalidParameterException Value is is not greater than getMin().
      */
     public void setMax(int max) {
@@ -166,12 +191,14 @@ public abstract class Part implements IdReferenceableObject {
         if (max <= this.min)
             throw new InvalidParameterException("Maximum stock level must be greater than the maximum stock level.");
         this.max = max;
-        propertyChangeSupport.firePropertyChange(PROP_MAX, oldMax, max);
+        propertyChangeSupport.firePropertyChange(ModelHelper.PROP_MAX, oldMax, max);
     }
     
     /**
-     * @param min The minimum number of parts in stock before the items need to be re-ordered or replaced.
-     * @param max The maximum number of parts that should be in stock after replacement inventory is re-ordered or replaced.
+     * Sets both the minimum and maximum number of parts that can be in stock, validating the new range simultaneously.
+     * 
+     * @param min The minimum number of parts that can be in stock.
+     * @param max The maximum number of parts that can be in stock.
      * @throws java.security.InvalidParameterException min is less than zero or max is is not greater than min.
      */
     public void setMinMax(int min, int max) {
@@ -186,19 +213,19 @@ public abstract class Part implements IdReferenceableObject {
                 return;
         } else {
             this.min = min;
-            propertyChangeSupport.firePropertyChange(PROP_MIN, oldMin, min);
+            propertyChangeSupport.firePropertyChange(ModelHelper.PROP_MIN, oldMin, min);
             if (oldMax == max)
                 return;
         }
         this.max = max;
-        propertyChangeSupport.firePropertyChange(PROP_MAX, oldMax, max);
+        propertyChangeSupport.firePropertyChange(ModelHelper.PROP_MAX, oldMax, max);
     }
     
     /**
-     *Ensures product has a valid unique identifier before it's added to the allParts list.
+     * Ensures product has a valid unique identifier before it's added to the allParts list.
      */
     public final void ensureId() {
-        if (Inventory.containsPart(this))
+        if (ModelHelper.isPartAdded(this))
             return;
         int oldId = getId();
         if (oldId < 0 || Inventory.lookupPart(oldId) != null) {
@@ -209,7 +236,7 @@ public abstract class Part implements IdReferenceableObject {
                 for (int i = 0; i < nextId; i++) {
                     if (Inventory.lookupPart(i) != null) {
                         id = i;
-                        propertyChangeSupport.firePropertyChange(PROP_ID, oldId, i);
+                        propertyChangeSupport.firePropertyChange(ModelHelper.PROP_ID, oldId, i);
                         return;
                     }
                 }
@@ -217,15 +244,12 @@ public abstract class Part implements IdReferenceableObject {
                 do { nextId++; } while (Inventory.lookupPart(nextId) != null);
             }
             id = nextId;
-            propertyChangeSupport.firePropertyChange(PROP_ID, oldId, nextId);
+            propertyChangeSupport.firePropertyChange(ModelHelper.PROP_ID, oldId, nextId);
         }
     }
     
-    public final transient PropertyChangeSupport propertyChangeSupport = new PropertyChangeSupport(this);
-    public static final String PROP_ID = "id";
-    public static final String PROP_NAME = "name";
-    public static final String PROP_PRICE = "price";
-    public static final String PROP_STOCK = "stock";
-    public static final String PROP_MIN = "min";
-    public static final String PROP_MAX = "max";
+    /**
+     * Allows for more efficient detection of property value changes.
+     */
+    protected final PropertyChangeSupport propertyChangeSupport = new PropertyChangeSupport(this);
 }

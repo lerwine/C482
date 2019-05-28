@@ -1,20 +1,12 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package model;
 
-import java.security.InvalidKeyException;
 import java.security.InvalidParameterException;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-import javafx.scene.control.Alert;
-import javafx.stage.StageStyle;
-import javax.management.openmbean.KeyAlreadyExistsException;
 
 /**
- *Maintains the in-memory inventory lists.
+ * Maintains the in-memory inventory lists.
+ * 
  * @author Leonard T. Erwine
  */
 
@@ -23,7 +15,8 @@ public class Inventory {
     private static final ObservableList<Product> allProducts = FXCollections.observableArrayList();
     
     /**
-     *Adds a part to the in-memory inventory list.
+     * Adds a part to the in-memory inventory list.
+     * 
      * @param part The new part to be added.
      * @throws NullPointerException part is null.
      */
@@ -38,7 +31,8 @@ public class Inventory {
     }
     
     /**
-     *Adds a product to the in-memory inventory list.
+     * Adds a product to the in-memory inventory list.
+     * 
      * @param product The new product to be added.
      * @throws NullPointerException product is null.
      */
@@ -53,21 +47,24 @@ public class Inventory {
     }
     
     /**
-     *Gets the Part whose unique identifier matches a specified value.
+     * Gets the Part whose unique identifier matches a specified value.
+     * 
      * @param partId The unique identifier to search for.
      * @return The Part where getId() matches the specified value or null if no matches were found.
      */
-    public static Part lookupPart(int partId) { return (Part)lookup(allParts, partId); }
+    public static Part lookupPart(int partId) { return (Part)ModelHelper.lookupPart(allParts, partId); }
     
     /**
-     *Gets the Product whose unique identifier matches a specified value.
+     * Gets the Product whose unique identifier matches a specified value.
+     * 
      * @param productId The unique identifier to search for.
      * @return The Product where getId() matches the specified value or null if no matches were found.
      */
-    public static Product lookupProduct(int productId) { return (Product)lookup(allProducts, productId); }
+    public static Product lookupProduct(int productId) { return (Product)ModelHelper.lookupProduct(allProducts, productId); }
     
     /**
-     *Gets the Part whose name matches a specified value (case-insensitive).
+     * Gets the Part whose name matches a specified value (case-insensitive).
+     * 
      * @param partName The part name to search for.
      * @return The Part where getName() matches the specified string or null if no matches were found.
      */
@@ -82,7 +79,8 @@ public class Inventory {
     }
     
     /**
-     *Gets the Product whose name matches a specified value (case-insensitive).
+     * Gets the Product whose name matches a specified value (case-insensitive).
+     * 
      * @param productName The product name to search for.
      * @return The Product where getName() matches the specified string or null if no matches were found.
      */
@@ -97,7 +95,8 @@ public class Inventory {
     }
     
     /**
-     *Updates a part at a specific index, with the values of a Part object.
+     * Updates a part at a specific index, with the values of a Part object.
+     * 
      * @param index - The index of the part to update.
      * @param part - Contains the values to apply to the part.
      */
@@ -167,7 +166,7 @@ public class Inventory {
     
     /**
      *
-     * @param part
+     * @param product
      */
     public static void deleteProduct(Product product) {
         if (product != null && allProducts.contains(product))
@@ -185,89 +184,4 @@ public class Inventory {
      * @return
      */
     public static ObservableList<Product> getAllProducts() { return allProducts; }
-    
-    /**
-     *Re-usable utility method to search a list for an item matching a unique identifier.
-     * @param source List to search.
-     * @param id Unique identifier to search for.
-     * @return The first element whose unique identifier matches the specified value or null if no match was found.
-     */
-    public static IdReferenceableObject lookup(ObservableList<? extends IdReferenceableObject> source, int id) {
-        for (IdReferenceableObject item : source) {
-            if (item.getId() == id)
-                return item;
-        }
-        return null;
-    }
-    
-    /* *
-     *Gets the index of an item matching the specified unique identifier.
-     * @param source The list to search.
-     * @param id The Id to search for.
-     * @return The index of the first item in the source list where getId() matches the specified id value.
-    public static int indexOfId(ObservableList<? extends IdReferenceableObject> source, int id) {
-        for (int i = 0; i < source.size(); i++) {
-            if (source.get(i).getId() == id)
-                return i;
-        }
-        return -1;
-    }
-     */
-    
-    /**
-     *Asserts that a candidate unique identifier (getId()) is not negative, and that no other Part currently contained in the allParts list have that unique identifier.
-     * @param part The target Part that is presumably about to have the id changed.
-     * @param newId The new unique identifier value.
-     * @throws java.security.InvalidKeyException newId is less than zero or another Part already uses that Id;
-     */
-    public static void assertValidIdChange(Part part, int newId) throws InvalidKeyException {
-        if (part == null)
-            throw new NullPointerException();
-        if (newId < 0)
-            throw new InvalidKeyException();
-        if (part.getId() == newId)
-            return;
-        int index = allParts.indexOf(part);
-        if (index < 0)
-            return;
-        for (int i = 0; i < allParts.size(); i++) {
-            if (i != index && allParts.get(i).getId() == newId)
-                throw new KeyAlreadyExistsException();
-        }
-    }
-    
-    /**
-     *Asserts that a candidate unique identifier (getId()) is not negative, and that no other Part currently contained in the allParts list have that unique identifier.
-     * @param product The target Product that is presumably about to have the id changed.
-     * @param newId The new unique identifier value.
-     * @throws java.security.InvalidKeyException newId is less than zero or another Product already uses that Id;
-     */
-    public static void assertValidIdChange(Product product, int newId) throws InvalidKeyException {
-        if (product == null)
-            throw new NullPointerException();
-        if (newId < 0)
-            throw new InvalidKeyException();
-        if (product.getId() == newId)
-            return;
-        int index = allProducts.indexOf(product);
-        if (index < 0)
-            return;
-        for (int i = 0; i < allProducts.size(); i++) {
-            if (i != index && allProducts.get(i).getId() == newId)
-                throw new KeyAlreadyExistsException();
-        }
-    }
-    
-    public static boolean containsPart(Part part) { return allParts.contains(part); }
-    
-    public static boolean containsProduct(Product product) { return allProducts.contains(product); }
-    
-    public static void showWarningAlert(String headerText, String contentText) {
-        Alert alert = new Alert(Alert.AlertType.WARNING);
-        alert.initStyle(StageStyle.UTILITY);
-        alert.setTitle("Warning");
-        alert.setHeaderText(headerText);
-        alert.setContentText(contentText);
-        alert.showAndWait();
-    }
 }
