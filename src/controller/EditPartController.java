@@ -241,6 +241,8 @@ public class EditPartController implements Initializable {
         outsourcedRadioButton.selectedProperty().setValue(false);
         companyOrMachineLabel.setText(LABELTEXT_MACHINEID);
         companyOrMachineTextField.setAccessibleText(LABELTEXT_MACHINEID);
+        inventoryTextField.setText("0");
+        minTextField.setText("1");
     }
   
     /**

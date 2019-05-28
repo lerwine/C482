@@ -308,6 +308,8 @@ public class EditProductController implements Initializable {
         uPartNameTableColumn.setCellValueFactory(new PropertyValueFactory<>(ModelHelper.PROP_NAME));
         uPricePerUnitTableColumn.setCellValueFactory(new PropertyValueFactory<>(ModelHelper.PROP_PRICE));
         model.Inventory.getAllParts().forEach((part) -> availableParts.add(part));
+        inventoryTextField.setText("0");
+        minTextField.setText("1");
     }
     
     /**
